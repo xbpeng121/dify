@@ -4,6 +4,13 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Self, Union
 from uuid import uuid4
+from core.workflow.constants import (
+    CONVERSATION_VARIABLE_NODE_ID, 
+    ENVIRONMENT_VARIABLE_NODE_ID, 
+    SYSTEM_VARIABLE_NODE_ID,
+    VARIABLE_TYPES,
+    )
+from core.variables.types import SegmentType 
 
 if TYPE_CHECKING:
     from models.model import AppMode
@@ -232,6 +239,55 @@ class Workflow(Base):
 
         return variables
 
+    def endnodes_output_form(self) -> dict:
+        # get end nodes from graph
+        if not self.graph:
+            return []
+        graph_dict = self.graph_dict
+        if "nodes" not in graph_dict:
+            return []
+        end_nodes = [node for node in graph_dict["nodes"] if node["data"]["type"] == "end"]
+        if not end_nodes:
+            return []
+        # get endnodes_output_form from end nodes (maybe more than one end nodes)
+        # ["end_node_title":"End","variables":[{"variable":"xxx","value_type":"xxx","value_selector":[]},...],...]
+        result = []
+        i = 0
+        for end_node in end_nodes:
+            i = i + 1
+            outputs=end_node.get("data", {}).get("outputs", [])
+            tmp={}
+            for output in outputs:
+                value_selector = output["value_selector"]
+                value_type = self.get_type(value_selector=value_selector)
+                output["value_type"] = value_type
+            tmp["end_node_title"]=end_node.get("data", {}).get("title", str(i))
+            tmp["variables"]=outputs
+            result.append(tmp)
+        return result
+
+    def get_type(self,value_selector: Sequence[str]): #default type string
+        value_type = SegmentType.STRING
+        if len(value_selector) < 2:
+            return value_type
+        
+        if value_selector[0] == SYSTEM_VARIABLE_NODE_ID:
+            variable_key = ".".join(value_selector)
+            value_type = VARIABLE_TYPES.get(variable_key,SegmentType.STRING)
+        elif value_selector[0] == ENVIRONMENT_VARIABLE_NODE_ID:
+            pass
+        elif value_selector[0] == CONVERSATION_VARIABLE_NODE_ID:
+            pass
+        else:
+            if not self.graph:
+                return value_type
+            graph_dict = self.graph_dict
+            node = next((node for node in graph_dict["nodes"] if node["id"] == value_selector[0]), None)
+            value_selector[0]=node["data"]["type"]
+            variable_key = ".".join(value_selector)
+            value_type = VARIABLE_TYPES.get(variable_key,SegmentType.STRING)
+        return value_type
+    
     @property
     def unique_hash(self) -> str:
         """
@@ -352,7 +408,7 @@ class WorkflowRunStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     STOPPED = "stopped"
-    PARTIAL_SUCCEEDED = "partial-succeeded"
+    PARTIAL_SUCCESSED = "partial-succeeded"
 
 
 class WorkflowRun(Base):

@@ -320,6 +320,9 @@ Chat applications support session persistence, allowing previous chat history to
     The file to be uploaded.
   - `user` (string) Required
     User identifier, defined by the developer's rules, must be unique within the application.
+  - `is_temporary` (bool) Optional（default false）
+    file will be deleted by system automatically if this parameter is set, The default expired_time is 1 day.
+    To chanage expired_time by set CLEAN_UPLOAD_TEMPORARY_FILE_DAY_SETTING in .env file.
 
   ### Response
   After a successful upload, the server will return the file's ID and related information.
@@ -347,7 +350,7 @@ Chat applications support session persistence, allowing previous chat history to
   </Col>
   <Col sticky>
   ### Request Example
-  <CodeGroup title="Request" tag="POST" label="/files/upload" targetCode={`curl -X POST '${props.appDetail.api_base_url}/files/upload' \\\n--header 'Authorization: Bearer {api_key}' \\\n--form 'file=@localfile;type=image/[png|jpeg|jpg|webp|gif] \\\n--form 'user=abc-123'`}>
+  <CodeGroup title="Request" tag="POST" label="/files/upload" targetCode={`curl -X POST '${props.appDetail.api_base_url}/files/upload' \\\n--header 'Authorization: Bearer {api_key}' \\\n--form 'file=@localfile;type=image/[png|jpeg|jpg|webp|gif] \\\n--form 'user=abc-123' \\\n--form 'is_temporary=true'`}>
 
     ```bash {{ title: 'cURL' }}
     curl -X POST '${props.appDetail.api_base_url}/files/upload' \

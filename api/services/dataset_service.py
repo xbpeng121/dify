@@ -977,6 +977,7 @@ class DocumentService:
                             raise FileNotExistsError()
 
                         file_name = file.name
+                        file.is_temporary=False
                         data_source_info = {
                             "upload_file_id": file_id,
                         }

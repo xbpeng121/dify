@@ -14,6 +14,7 @@ class FileApi(WebApiResource):
     def post(self, app_model, end_user):
         file = request.files["file"]
         source = request.form.get("source")
+        is_temporary = bool(request.form.get("is_temporary")) # 传任何值都是True,不传则为False
 
         if "file" not in request.files:
             raise NoFileUploadedError()
@@ -34,6 +35,7 @@ class FileApi(WebApiResource):
                 mimetype=file.mimetype,
                 user=end_user,
                 source="datasets" if source == "datasets" else None,
+                is_temporary=is_temporary
             )
         except services.errors.file.FileTooLargeError as file_too_large_error:
             raise FileTooLargeError(file_too_large_error.description)

@@ -37,6 +37,7 @@ class FileService:
         user: Union[Account, EndUser, Any],
         source: Literal["datasets"] | None = None,
         source_url: str = "",
+        is_temporary: bool = False,
     ) -> UploadFile:
         # get file extension
         extension = os.path.splitext(filename)[1].lstrip(".").lower()
@@ -87,13 +88,26 @@ class FileService:
             used=False,
             hash=hashlib.sha3_256(content).hexdigest(),
             source_url=source_url,
+            is_temporary=is_temporary,
         )
 
         db.session.add(upload_file)
         db.session.commit()
 
         return upload_file
-
+    
+    @staticmethod
+    def delete_file(*,file_key: str ) -> bool:
+        # delete file from storage
+        result1=""
+        if storage.exists(file_key):
+            result1 = storage.delete(file_key)
+        # delete file index from db
+        result2 = db.session.query(UploadFile).filter(UploadFile.key == file_key).delete()
+        db.session.commit()
+        # click.echo(click.style("result1: {}\nresult2: {}".format(result1,result2), fg="green"))
+        return result2
+    
     @staticmethod
     def is_file_size_within_limit(*, extension: str, file_size: int) -> bool:
         if extension in IMAGE_EXTENSIONS:

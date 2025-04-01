@@ -791,7 +791,7 @@ class Conversation(db.Model):  # type: ignore[name-defined]
             WorkflowRunStatus.SUCCEEDED: 0,
             WorkflowRunStatus.FAILED: 0,
             WorkflowRunStatus.STOPPED: 0,
-            WorkflowRunStatus.PARTIAL_SUCCEEDED: 0,
+            WorkflowRunStatus.PARTIAL_SUCCESSED: 0,
         }
 
         for message in messages:
@@ -802,7 +802,7 @@ class Conversation(db.Model):  # type: ignore[name-defined]
             {
                 "success": status_counts[WorkflowRunStatus.SUCCEEDED],
                 "failed": status_counts[WorkflowRunStatus.FAILED],
-                "partial_success": status_counts[WorkflowRunStatus.PARTIAL_SUCCEEDED],
+                "partial_success": status_counts[WorkflowRunStatus.PARTIAL_SUCCESSED],
             }
             if messages
             else None
@@ -1548,6 +1548,7 @@ class UploadFile(Base):
     used_at: Mapped[datetime | None] = db.Column(db.DateTime, nullable=True)
     hash: Mapped[str | None] = db.Column(db.String(255), nullable=True)
     source_url: Mapped[str] = mapped_column(sa.TEXT, default="")
+    is_temporary: Mapped[bool] = db.Column(db.Boolean, nullable=False, server_default=db.text("false"))
 
     def __init__(
         self,
@@ -1567,6 +1568,7 @@ class UploadFile(Base):
         used_at: datetime | None = None,
         hash: str | None = None,
         source_url: str = "",
+        is_temporary: bool = False,
     ):
         self.tenant_id = tenant_id
         self.storage_type = storage_type
@@ -1583,6 +1585,7 @@ class UploadFile(Base):
         self.used_at = used_at
         self.hash = hash
         self.source_url = source_url
+        self.is_temporary = is_temporary
 
 
 class ApiRequest(Base):

@@ -283,6 +283,11 @@ class FileUploadConfig(BaseSettings):
         default=10,
     )
 
+    CLEAN_UPLOAD_TEMPORARY_FILE_DAY_SETTING: PositiveInt = Field(
+        description="Interval in days for temporary file cleanup operations",
+        default=1,
+    )
+
 
 class HttpConfig(BaseSettings):
     """

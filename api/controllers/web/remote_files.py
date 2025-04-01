@@ -35,9 +35,11 @@ class RemoteFileUploadApi(WebApiResource):
     def post(self, app_model, end_user):  # Add app_model and end_user parameters
         parser = reqparse.RequestParser()
         parser.add_argument("url", type=str, required=True, help="URL is required")
+        parser.add_argument('is_temporary', type=bool, required=False, default=False, help='default False')
         args = parser.parse_args()
 
         url = args["url"]
+        is_temporary = args["is_temporary"]
 
         try:
             resp = ssrf_proxy.head(url=url)
@@ -62,6 +64,7 @@ class RemoteFileUploadApi(WebApiResource):
                 mimetype=file_info.mimetype,
                 user=end_user,
                 source_url=url,
+                is_temporary=is_temporary
             )
         except services.errors.file.FileTooLargeError as file_too_large_error:
             raise FileTooLargeError(file_too_large_error.description)
