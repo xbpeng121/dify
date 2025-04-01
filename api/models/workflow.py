@@ -4,13 +4,14 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Self, Union
 from uuid import uuid4
+
+from core.variables.types import SegmentType
 from core.workflow.constants import (
-    CONVERSATION_VARIABLE_NODE_ID, 
-    ENVIRONMENT_VARIABLE_NODE_ID, 
+    CONVERSATION_VARIABLE_NODE_ID,
+    ENVIRONMENT_VARIABLE_NODE_ID,
     SYSTEM_VARIABLE_NODE_ID,
     VARIABLE_TYPES,
-    )
-from core.variables.types import SegmentType 
+)
 
 if TYPE_CHECKING:
     from models.model import AppMode
@@ -274,9 +275,7 @@ class Workflow(Base):
         if value_selector[0] == SYSTEM_VARIABLE_NODE_ID:
             variable_key = ".".join(value_selector)
             value_type = VARIABLE_TYPES.get(variable_key,SegmentType.STRING)
-        elif value_selector[0] == ENVIRONMENT_VARIABLE_NODE_ID:
-            pass
-        elif value_selector[0] == CONVERSATION_VARIABLE_NODE_ID:
+        elif value_selector[0] == ENVIRONMENT_VARIABLE_NODE_ID or value_selector[0] == CONVERSATION_VARIABLE_NODE_ID:
             pass
         else:
             if not self.graph:

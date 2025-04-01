@@ -723,3 +723,113 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
     </CodeGroup>
   </Col>
 </Row>
+
+---
+
+<Heading
+  url='/workflow/output'
+  method='GET'
+  title='获取工作流输出信息'
+  name='#/workflow/output'
+/>
+<Row>
+  <Col>
+    用于第一次使用工作流时，获取结束节点的输出参数名称、类型及默认值等。
+
+    ### Response
+    - `workflow_output_form` (array[object]) 工作流结束节点的输出参数
+      - `end_node_title` (string) 结束节点名称
+      - `variables` (array[object]) 该结束节点的输出参数列表
+        - `variable` (string) 输出参数名称
+        - `value_selector` (array[string]) 参数选择器（用于定位参数来源） 
+        - `value_type` (string) 参数类型, 枚举值来源： ["number","string","object","file","array[string]","array[number]","array[object]","array[file]","none"]
+
+
+  </Col>
+  <Col sticky>
+
+    <CodeGroup title="Request" tag="GET" label="/workflow/output" targetCode={` curl -X GET '${props.appDetail.api_base_url}/workflow/output' \\\n-H 'Authorization: Bearer {api_key}'`}>
+
+    ```bash {{ title: 'cURL' }}
+    curl -X GET '${props.appDetail.api_base_url}/workflow/output' \
+    --header 'Authorization: Bearer {api_key}'
+    ```
+
+    </CodeGroup>
+
+    <CodeGroup title="Response">
+    ```json {{ title: 'Response' }}
+    {
+    "workflow_output_form": [
+        {
+            "variables": [
+                {
+                    "variable": "param_1",
+                    "value_selector": [
+                        "sys",
+                        "user_id"
+                    ],
+                    "value_type": "string"
+                },
+                {
+                    "variable": "parma_2",
+                    "value_selector": [
+                        "sys",
+                        "files"
+                    ],
+                    "value_type": "array[file]"
+                },
+                {
+                    "variable": "parma_3",
+                    "value_selector": [
+                        "llm",
+                        "text"
+                    ],
+                    "value_type": "string"
+                }
+            ],
+            "end_node_title": "End"
+        },
+        {
+            "variables": [
+                {
+                    "variable": "param_4",
+                    "value_selector": [
+                        "llm",
+                        "text"
+                    ],
+                    "value_type": "string"
+                },
+                {
+                    "variable": "param_5",
+                    "value_selector": [
+                        "env",
+                        "env_sec"
+                    ],
+                    "value_type": "string"
+                },
+                {
+                    "variable": "param_6",
+                    "value_selector": [
+                        "env",
+                        "env_num"
+                    ],
+                    "value_type": "string"
+                },
+                {
+                    "variable": "param_7",
+                    "value_selector": [
+                        "env",
+                        "env_str"
+                    ],
+                    "value_type": "string"
+                }
+            ],
+            "end_node_title": "\u7ed3\u675f 2"
+        }
+    ]
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>

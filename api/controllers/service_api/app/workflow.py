@@ -8,6 +8,7 @@ from werkzeug.exceptions import InternalServerError
 
 from controllers.service_api import api
 from controllers.service_api.app.error import (
+    AppUnavailableError,
     CompletionRequestError,
     NotWorkflowAppError,
     ProviderModelCurrentlyNotSupportError,
@@ -162,7 +163,25 @@ class WorkflowAppLogApi(Resource):
             return workflow_app_log_pagination
 
 
+class WorkflowOutputApi(Resource):
+    @validate_app_token
+    def get(self, app_model: App):
+        """
+        Get workflow app Input parameters and Output parameters
+        """
+        logging.info("hello workflow input output")
+        app_mode = AppMode.value_of(app_model.mode)
+        if app_mode != AppMode.WORKFLOW:
+            raise NotWorkflowAppError()
+        workflow = app_model.workflow
+        if workflow is None:
+                raise AppUnavailableError()
+        workflow_output_form = workflow.endnodes_output_form()
+        return {"workflow_output_form": workflow_output_form}
+        
+
 api.add_resource(WorkflowRunApi, "/workflows/run")
 api.add_resource(WorkflowRunDetailApi, "/workflows/run/<string:workflow_run_id>")
 api.add_resource(WorkflowTaskStopApi, "/workflows/tasks/<string:task_id>/stop")
 api.add_resource(WorkflowAppLogApi, "/workflows/logs")
+api.add_resource(WorkflowOutputApi, "/workflows/output")
