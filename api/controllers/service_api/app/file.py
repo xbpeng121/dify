@@ -21,7 +21,7 @@ class FileApi(Resource):
     @marshal_with(file_fields)
     def post(self, app_model: App, end_user: EndUser):
         file = request.files["file"]
-
+        is_temporary = bool(request.form.get("is_temporary"))  # 传任何值都是True,不传就是False
         # check file
         if "file" not in request.files:
             raise NoFileUploadedError()
@@ -41,6 +41,7 @@ class FileApi(Resource):
                 content=file.read(),
                 mimetype=file.mimetype,
                 user=end_user,
+                is_temporary=is_temporary,
             )
         except services.errors.file.FileTooLargeError as file_too_large_error:
             raise FileTooLargeError(file_too_large_error.description)

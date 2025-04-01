@@ -53,6 +53,7 @@ class FileApi(Resource):
         source_str = request.form.get("source")
         source: Literal["datasets"] | None = "datasets" if source_str == "datasets" else None
 
+        is_temporary = bool(request.form.get("is_temporary"))  # 传任何值都是True,不传则为False
         if "file" not in request.files:
             raise NoFileUploadedError()
 
@@ -75,6 +76,7 @@ class FileApi(Resource):
                 mimetype=file.mimetype,
                 user=current_user,
                 source=source,
+                is_temporary=is_temporary
             )
         except services.errors.file.FileTooLargeError as file_too_large_error:
             raise FileTooLargeError(file_too_large_error.description)

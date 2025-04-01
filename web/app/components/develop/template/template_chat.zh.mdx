@@ -298,11 +298,14 @@ import { Row, Col, Properties, Property, Heading, SubProperty } from '../md.tsx'
     ### Request Body
     该接口需使用  `multipart/form-data` 进行请求。
     <Properties>
-      <Property name='file' type='file' key='file'>
+      <Property name='file' type='file(Required)' key='file'>
         要上传的文件。
       </Property>
-      <Property name='user' type='string' key='user'>
+      <Property name='user' type='string(Required)' key='user'>
           用户标识，用于定义终端用户的身份，必须和发送消息接口传入 user 保持一致。
+      </Property>
+      <Property name='is_temporary' type='bool(Optional)' key='is_temporary'>
+          临时文件标识，默认值false,若该参数被传入(任何值都视为true)，文件将会在1天后自动删除，你可以在.env中通过设置CLEAN_UPLOAD_TEMPORARY_FILE_DAY_SETTING参数调整删除时间。
       </Property>
     </Properties>
 
@@ -329,7 +332,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty } from '../md.tsx'
   </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="POST" label="/files/upload" targetCode={`curl -X POST '${props.appDetail.api_base_url}/files/upload' \\\n--header 'Authorization: Bearer {api_key}' \\\n--form 'file=@localfile;type=image/[png|jpeg|jpg|webp|gif] \\\n--form 'user=abc-123'`}>
+    <CodeGroup title="Request" tag="POST" label="/files/upload" targetCode={`curl -X POST '${props.appDetail.api_base_url}/files/upload' \\\n--header 'Authorization: Bearer {api_key}' \\\n--form 'file=@localfile;type=image/[png|jpeg|jpg|webp|gif] \\\n--form 'user=abc-123' \\\n--form 'is_temporary=true'`}>
 
     ```bash {{ title: 'cURL' }}
     curl -X POST '${props.appDetail.api_base_url}/files/upload' \
