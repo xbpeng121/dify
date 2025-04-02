@@ -4,6 +4,8 @@ import os
 import uuid
 from typing import Any, Literal, Union
 
+from controllers.common import helpers
+
 from flask_login import current_user  # type: ignore
 from werkzeug.exceptions import NotFound
 
@@ -96,6 +98,35 @@ class FileService:
 
         return upload_file
     
+    @staticmethod
+    def set_file_not_temporary(*,file_id: str) ->UploadFile:
+        if not helpers.is_valid_uuid(file_id):
+            return None
+        # record the file not temporary
+        file = (
+            db.session.query(UploadFile)
+            .filter(UploadFile.id == file_id)
+            .first()
+        )
+        if file:
+            file.is_temporary=False
+            db.session.commit()
+
+        return file
+    
+    @staticmethod
+    def delete_file_by_id(*,file_id: str) ->bool:
+        if not helpers.is_valid_uuid(file_id):
+            return False
+        
+        file = (
+                db.session.query(UploadFile)
+                .filter(UploadFile.id == file_id)
+                .first()
+        )
+        if file:
+            return FileService.delete_file(file_key=file.key)
+        return None
     @staticmethod
     def delete_file(*,file_key: str ) -> bool:
         # delete file from storage

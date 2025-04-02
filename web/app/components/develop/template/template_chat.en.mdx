@@ -283,8 +283,8 @@ Chat applications support session persistence, allowing previous chat history to
     The file to be uploaded.
   - `user` (string) Required
     User identifier, defined by the developer's rules, must be unique within the application.
-  - `is_temporary` (bool) Optional（default false）
-    file will be deleted by system automatically if this parameter is set, The default expired_time is 1 day.
+  - `is_temporary` (bool) Optional（default true）
+    file will be deleted by system automatically, The default expired_time is 1 day.
     To chanage expired_time by set CLEAN_UPLOAD_TEMPORARY_FILE_DAY_SETTING in .env file.
 
 

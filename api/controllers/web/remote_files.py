@@ -35,7 +35,7 @@ class RemoteFileUploadApi(WebApiResource):
     def post(self, app_model, end_user):  # Add app_model and end_user parameters
         parser = reqparse.RequestParser()
         parser.add_argument("url", type=str, required=True, help="URL is required")
-        parser.add_argument('is_temporary', type=bool, required=False, default=False, help='default False')
+        parser.add_argument('is_temporary', type=bool, required=False, default=True, help='default True')
         args = parser.parse_args()
 
         url = args["url"]

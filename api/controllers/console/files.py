@@ -53,7 +53,10 @@ class FileApi(Resource):
         source_str = request.form.get("source")
         source: Literal["datasets"] | None = "datasets" if source_str == "datasets" else None
 
-        is_temporary = bool(request.form.get("is_temporary")) # 传任何值都是True,不传则为False
+        # is_temporary = bool(request.form.get("is_temporary")) # 传任何值都是True,不传则为False
+        is_temporary_str = request.form.get("is_temporary")
+        is_temporary: bool = str(is_temporary_str).lower() not in {"false", "no", "0"} #默认值为True
+
         if "file" not in request.files:
             raise NoFileUploadedError()
 

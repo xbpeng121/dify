@@ -333,7 +333,7 @@ import { Row, Col, Properties, Property, Heading, SubProperty } from '../md.tsx'
           用户标识，用于定义终端用户的身份，必须和发送消息接口传入 user 保持一致。
       </Property>
       <Property name='is_temporary' type='bool(Optional)' key='is_temporary'>
-          临时文件标识，默认值false,若该参数被传入(任何值都视为true)，文件将会在1天后自动删除，你可以在.env中通过设置CLEAN_UPLOAD_TEMPORARY_FILE_DAY_SETTING参数调整删除时间。
+          临时文件标识，默认值true，文件将会在1天后自动删除，你可以在.env中通过设置CLEAN_UPLOAD_TEMPORARY_FILE_DAY_SETTING参数调整删除时间。
       </Property>
     </Properties>
 

@@ -14,7 +14,9 @@ class FileApi(WebApiResource):
     def post(self, app_model, end_user):
         file = request.files["file"]
         source = request.form.get("source")
-        is_temporary = bool(request.form.get("is_temporary")) # 传任何值都是True,不传则为False
+        # is_temporary = bool(request.form.get("is_temporary")) # 传任何值都是True,不传则为False
+        is_temporary_str = request.form.get("is_temporary")
+        is_temporary: bool = str(is_temporary_str).lower() not in {"false", "no", "0"} #默认值为True
 
         if "file" not in request.files:
             raise NoFileUploadedError()

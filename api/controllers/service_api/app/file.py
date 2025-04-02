@@ -21,7 +21,9 @@ class FileApi(Resource):
     @marshal_with(file_fields)
     def post(self, app_model: App, end_user: EndUser):
         file = request.files["file"]
-        is_temporary = bool(request.form.get("is_temporary")) # 传任何值都是True,不传就是False
+        # is_temporary = bool(request.form.get("is_temporary")) # 传任何值都是True,不传就是False
+        is_temporary_str = request.form.get("is_temporary")
+        is_temporary: bool = str(is_temporary_str).lower() not in {"false", "no", "0"} #默认值为True
         # check file
         if "file" not in request.files:
             raise NoFileUploadedError()
