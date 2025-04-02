@@ -21,6 +21,7 @@ from extensions.ext_database import db
 from models.account import Account
 from models.model import App, AppMode, AppModelConfig
 from models.tools import ApiToolProvider
+from services.file_service import FileService
 from services.tag_service import TagService
 from tasks.remove_app_and_related_data_task import remove_app_and_related_data_task
 
@@ -220,6 +221,11 @@ class AppService:
         :param args: request args
         :return: App instance
         """
+
+        # if app icon is image before, delete the image file in storage and db
+        if app.icon_type == 'image':
+            FileService.delete_file_by_id(file_id=app.icon)
+
         app.name = args.get("name")
         app.description = args.get("description", "")
         app.max_active_requests = args.get("max_active_requests")
@@ -229,6 +235,11 @@ class AppService:
         app.use_icon_as_answer_icon = args.get("use_icon_as_answer_icon", False)
         app.updated_by = current_user.id
         app.updated_at = datetime.now(UTC).replace(tzinfo=None)
+
+        if app.icon_type == 'image':
+            # record the file not temporary
+            FileService.set_file_not_temporary(file_id=app.icon)
+
         db.session.commit()
 
         if app.max_active_requests is not None:

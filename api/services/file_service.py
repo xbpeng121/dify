@@ -13,6 +13,7 @@ from constants import (
     IMAGE_EXTENSIONS,
     VIDEO_EXTENSIONS,
 )
+from controllers.common import helpers
 from core.file import helpers as file_helpers
 from core.rag.extractor.extract_processor import ExtractProcessor
 from extensions.ext_database import db
@@ -90,6 +91,36 @@ class FileService:
 
         return upload_file
     
+    @staticmethod
+    def set_file_not_temporary(*, file_id: str) -> UploadFile:
+        if not helpers.is_valid_uuid(file_id):
+            return None
+        # record the file not temporary
+        file = (
+            db.session.query(UploadFile)
+            .filter(UploadFile.id == file_id)
+            .first()
+        )
+        if file:
+            file.is_temporary = False
+            db.session.commit()
+
+        return file
+    
+    @staticmethod
+    def delete_file_by_id(*, file_id: str) -> bool:
+        if not helpers.is_valid_uuid(file_id):
+            return False
+        
+        file = (
+                db.session.query(UploadFile)
+                .filter(UploadFile.id == file_id)
+                .first()
+        )
+        if file:
+            return FileService.delete_file(file_key=file.key)
+        return None
+
     @staticmethod
     def delete_file(*, file_key: str) -> bool:
         # delete file from storage

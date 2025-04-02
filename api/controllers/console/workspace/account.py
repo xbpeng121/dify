@@ -24,6 +24,7 @@ from models import AccountIntegrate, InvitationCode
 from services.account_service import AccountService
 from services.billing_service import BillingService
 from services.errors.account import CurrentPasswordIncorrectError as ServiceCurrentPasswordIncorrectError
+from services.file_service import FileService
 
 
 class AccountInitApi(Resource):
@@ -114,9 +115,17 @@ class AccountAvatarApi(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument("avatar", type=str, required=True, location="json")
         args = parser.parse_args()
+        
+        # if avatar icon is set before, delete the icoe file in storage and db
+        if current_user.avatar:
+            FileService.delete_file_by_id(file_id=current_user.avatar)
 
         updated_account = AccountService.update_account(current_user, avatar=args["avatar"])
-
+        
+        # record the file not temporary
+        if updated_account.avatar:
+            FileService.set_file_not_temporary(file_id=updated_account.avatar)
+    
         return updated_account
 
 

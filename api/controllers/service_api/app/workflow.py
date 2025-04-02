@@ -151,7 +151,7 @@ class WorkflowOutputApi(Resource):
             raise NotWorkflowAppError()
         workflow = app_model.workflow
         if workflow is None:
-                raise AppUnavailableError()
+            raise AppUnavailableError()
         workflow_output_form = workflow.endnodes_output_form()
         return {"workflow_output_form": workflow_output_form}
         

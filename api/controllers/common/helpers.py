@@ -6,7 +6,7 @@ import urllib.parse
 import warnings
 from collections.abc import Mapping
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import httpx
 
@@ -122,3 +122,11 @@ def get_parameters_from_feature_dict(*, features_dict: Mapping[str, Any], user_i
             "workflow_file_upload_limit": dify_config.WORKFLOW_FILE_UPLOAD_LIMIT,
         },
     }
+
+
+def is_valid_uuid(s):
+    try:
+        UUID(s)
+        return True
+    except ValueError:
+        return False
