@@ -6,7 +6,7 @@ import urllib.parse
 import warnings
 from collections.abc import Mapping
 from typing import Any
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import httpx
 
