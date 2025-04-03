@@ -20,9 +20,8 @@ from extensions.ext_database import db
 from models.account import Account
 from models.model import App, AppMode, AppModelConfig
 from models.tools import ApiToolProvider
-from models.model import UploadFile
-from services.tag_service import TagService
 from services.file_service import FileService
+from services.tag_service import TagService
 from tasks.remove_app_and_related_data_task import remove_app_and_related_data_task
 
 

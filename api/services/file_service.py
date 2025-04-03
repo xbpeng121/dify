@@ -4,8 +4,6 @@ import os
 import uuid
 from typing import Any, Literal, Union
 
-from controllers.common import helpers
-
 from flask_login import current_user  # type: ignore
 from werkzeug.exceptions import NotFound
 
@@ -16,6 +14,7 @@ from constants import (
     IMAGE_EXTENSIONS,
     VIDEO_EXTENSIONS,
 )
+from controllers.common import helpers
 from core.file import helpers as file_helpers
 from core.rag.extractor.extract_processor import ExtractProcessor
 from extensions.ext_database import db
