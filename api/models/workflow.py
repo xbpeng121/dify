@@ -407,7 +407,7 @@ class WorkflowRunStatus(StrEnum):
     SUCCEEDED = "succeeded"
     FAILED = "failed"
     STOPPED = "stopped"
-    PARTIAL_SUCCESSED = "partial-succeeded"
+    PARTIAL_SUCCEEDED = "partial-succeeded"
 
 
 class WorkflowRun(Base):
