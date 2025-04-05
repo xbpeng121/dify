@@ -59,9 +59,19 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
             - `audio` 具体类型包含：'MP3', 'M4A', 'WAV', 'WEBM', 'AMR'
             - `video` 具体类型包含：'MP4', 'MOV', 'MPEG', 'MPGA'
             - `custom` 具体类型包含：其他文件类型
-          - `transfer_method` (string) 传递方式，`remote_url` 图片地址 / `local_file` 上传文件
+          - `transfer_method` (string) 传递方式，`remote_url` 图片地址 / `local_file` 上传文件 / `base64` 转为base64在json中传输
           - `url` (string) 图片地址（仅当传递方式为 `remote_url` 时）
-          - `upload_file_id` (string) (string) 上传文件 ID（仅当传递方式为 `local_file` 时）
+          - `upload_file_id` (string)  上传文件 ID（仅当传递方式为 `local_file` 时）
+          - `base64` (string) 文件的base64串（仅当传递方式为`base64`时）
+      - `response_mode` (string) Required
+        返回响应模式，支持：
+        - `streaming` 流式模式（推荐）。基于 SSE（**[Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)**）实现类似打字机输出方式的流式返回。
+        - `blocking` 阻塞模式，等待执行完毕后返回结果。（请求若流程较长可能会被中断）。
+        <i>由于 Cloudflare 限制，请求会在 100 秒超时无返回后中断。</i>
+      - `user` (string) Required
+        用户标识，用于定义终端用户的身份，方便检索、统计。
+        由开发者定义规则，需保证用户标识在应用内唯一。
+
 
     ### Response
     当 `response_mode` 为 `blocking` 时，返回 CompletionResponse object。
