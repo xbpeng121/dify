@@ -112,6 +112,8 @@ def _get_encoded_string(f: File, /):
             data = _download_file_content(f._storage_key)
         case FileTransferMethod.TOOL_FILE:
             data = _download_file_content(f._storage_key)
+        case FileTransferMethod.BASE64:
+            return f._storage_key
 
     encoded_string = base64.b64encode(data).decode("utf-8")
     return encoded_string

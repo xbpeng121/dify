@@ -1,4 +1,5 @@
 import mimetypes
+import re
 import uuid
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
@@ -59,6 +60,7 @@ def build_from_mapping(
         FileTransferMethod.LOCAL_FILE: _build_from_local_file,
         FileTransferMethod.REMOTE_URL: _build_from_remote_url,
         FileTransferMethod.TOOL_FILE: _build_from_tool_file,
+        FileTransferMethod.BASE64: _build_from_base64,
     }
 
     build_func = build_functions.get(transfer_method)
@@ -231,7 +233,39 @@ def _get_remote_file_info(url: str):
 
     return mime_type, filename, file_size
 
+def _build_from_base64(*,
+    mapping: Mapping[str, Any],
+    tenant_id: str,
+    transfer_method: FileTransferMethod,
+) -> File:
+    base64_str = mapping.get("base64",'')
+    
+    file_type = FileType.value_of(mapping.get("type",'custom'))
+    
+    if not is_base64(base64_str):
+        raise ValueError("Invalid file base64")
 
+    return File(
+        id=mapping.get("id"),
+        filename="",
+        tenant_id=tenant_id,
+        type=file_type,
+        transfer_method=transfer_method,
+        remote_url="",
+        mime_type="text/plain",
+        extension="",
+        size=len(base64_str),
+        storage_key=base64_str,
+    )
+
+def is_base64(s):
+    # Base64正则表达式模式
+    pattern = r'^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$'
+    # 检查字符串是否符合Base64格式
+    if re.fullmatch(pattern, s):
+        return True
+    return False
+    
 def _build_from_tool_file(
     *,
     mapping: Mapping[str, Any],

@@ -52,9 +52,10 @@ Workflow applications offers non-session support and is ideal for translation, a
             - `audio` ('MP3', 'M4A', 'WAV', 'WEBM', 'AMR')
             - `video` ('MP4', 'MOV', 'MPEG', 'MPGA')
             - `custom` (Other file types)
-          - `transfer_method` (string) Transfer method, `remote_url` for image URL / `local_file` for file upload
+          - `transfer_method` (string) Transfer method, `remote_url` for image URL / `local_file` for file upload / `base64` for base64 string in json
           - `url` (string) Image URL (when the transfer method is `remote_url`)
           - `upload_file_id` (string) Uploaded file ID, which must be obtained by uploading through the File Upload API in advance (when the transfer method is `local_file`)
+          - `base64` (string) base64 encoded string, (when the transfer method is `base64`)
 
       - `response_mode` (string) Required
         The mode of response return, supporting:

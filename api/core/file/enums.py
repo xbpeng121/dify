@@ -18,6 +18,7 @@ class FileType(StrEnum):
 
 class FileTransferMethod(StrEnum):
     REMOTE_URL = "remote_url"
+    BASE64 = "base64"
     LOCAL_FILE = "local_file"
     TOOL_FILE = "tool_file"
 
