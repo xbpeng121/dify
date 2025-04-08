@@ -32,7 +32,7 @@ VARIABLE_TYPES = {
     f"{NodeType.VARIABLE_AGGREGATOR}.output": SegmentType.STRING,
     # f"{NodeType.LEGACY_VARIABLE_AGGREGATOR}.": SegmentType.STRING,
     # f"{NodeType.LOOP}.": SegmentType.STRING,
-    f"{NodeType.LOOP_START}.output": SegmentType.STRING,
+    # f"{NodeType.LOOP_START}.output": SegmentType.STRING,
     # f"{NodeType.ITERATION}.": SegmentType.STRING,
     # f"{NodeType.ITERATION_START}.": SegmentType.STRING,
     # f"{NodeType.PARAMETER_EXTRACTOR}.": SegmentType.STRING,
