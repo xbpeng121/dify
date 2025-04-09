@@ -1,8 +1,8 @@
-"""table upload_files add is_temporary field
+"""add is_temporary field in uploda_file table
 
-Revision ID: e668df7c7f83
-Revises: a39828e9132f
-Create Date: 2025-03-27 17:41:41.207393
+Revision ID: 95d05ec84c4e
+Revises: a91b476a53de
+Create Date: 2025-04-09 13:05:31.713166
 
 """
 from alembic import op
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'e668df7c7f83'
-down_revision = 'a39828e9132f'
+revision = '95d05ec84c4e'
+down_revision = 'a91b476a53de'
 branch_labels = None
 depends_on = None
 
