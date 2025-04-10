@@ -740,10 +740,10 @@ Workflow applications offers non-session support and is ideal for translation, a
 ---
 
 <Heading
-  url='/workflow/output'
+  url='/workflows/output'
   method='GET'
   title='Get workflow output Information'
-  name='#/workflow/output'
+  name='#/workflows/output'
 />
 <Row>
   <Col>
@@ -760,10 +760,10 @@ Workflow applications offers non-session support and is ideal for translation, a
   </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/workflow/output" targetCode={` curl -X GET '${props.appDetail.api_base_url}/workflow/output' \\\n-H 'Authorization: Bearer {api_key}'`}>
+    <CodeGroup title="Request" tag="GET" label="/workflows/output" targetCode={` curl -X GET '${props.appDetail.api_base_url}/workflows/output' \\\n-H 'Authorization: Bearer {api_key}'`}>
 
     ```bash {{ title: 'cURL' }}
-    curl -X GET '${props.appDetail.api_base_url}/workflow/output' \
+    curl -X GET '${props.appDetail.api_base_url}/workflows/output' \
     --header 'Authorization: Bearer {api_key}'
     ```
 
