@@ -2,7 +2,7 @@ import mimetypes
 import re
 import uuid
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, cast
+from typing import Any, Union, cast
 
 import httpx
 from sqlalchemy import select
@@ -205,13 +205,13 @@ def _build_from_base64(*,
     tenant_id: str,
     transfer_method: FileTransferMethod,
 ) -> File:
-    base64_str = mapping.get("base64", '')
+    base64_url = mapping.get("base64", '')
     
     file_type = FileType.value_of(mapping.get("type", 'custom'))
     
-    if not is_base64(base64_str):
+    if not base64_file["is_valid"]:
         raise ValueError("Invalid file base64")
-
+    
     return File(
         id=mapping.get("id"),
         filename="",
@@ -219,20 +219,71 @@ def _build_from_base64(*,
         type=file_type,
         transfer_method=transfer_method,
         remote_url="",
-        mime_type="text/plain",
+        mime_type=base64_file["mime_type"],
         extension="",
-        size=len(base64_str),
-        storage_key=base64_str,
+        size=base64_file['encoded_length'],
+        storage_key=base64_file["base64_data"],
     )
 
 
-def is_base64(s):
-    # Base64正则表达式模式
-    pattern = r'^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$'
-    # 检查字符串是否符合Base64格式
-    if re.fullmatch(pattern, s):
-        return True
-    return False
+def get_base64_info(data_url: str) -> dict[str, Union[str, int, bool]]:
+    """
+    验证数据URL中的Base64部分格式有效性（不解码数据，不分离MIME类型）
+    
+    参数:
+        data_url: 格式如 "data:image/png;base64,iVBORw0KGgoAAAAN..."
+        
+    返回:
+        包含以下信息的字典:
+        - 'mime_type': 完整的MIME类型字符串 (如 "image/png")
+        - 'is_valid': 是否符合Base64格式规范
+        - 'encoded_length': Base64编码部分的字符长度
+        - 'base64_data': Base64编码部分的字符
+        - 'data_url_length': 整个数据URL的长度
+        - 'has_padding': 是否有等号填充字符
+        - 'padding_count': 填充字符数量(0/1/2)
+    """
+    # 初始化结果
+    result = {
+        'mime_type': None,
+        'is_valid': False,
+        'encoded_length': 0,
+        'base64_data': '',
+        'data_url_length': len(data_url),
+        'has_padding': False,
+        'padding_count': 0
+    }
+    
+    # 正则匹配（严格模式）
+    pattern = r'^data:(?P<mime>[\w\-]+\/[\w\+\.\-]+);base64,(?P<data>[a-zA-Z0-9+/=]+)$'
+    match = re.fullmatch(pattern, data_url)
+    
+    if not match:
+        return result
+    
+    # 提取信息
+    result['mime_type'] = match.group('mime')
+    base64_data = match.group('data')
+    result['base64_data'] = base64_data
+    result['encoded_length'] = len(base64_data)
+    
+    # Base64格式验证（三步检查）
+    # 1. 检查长度规范
+    if len(base64_data) % 4 != 0:
+        return result
+    
+    # 2. 检查填充字符
+    if '=' in base64_data:
+        if (not base64_data.endswith('=') 
+        or base64_data.count('=') > 2 
+        or base64_data[:-base64_data.count('=')].count("=") > 0):
+            return result
+        result['has_padding'] = True
+        result['padding_count'] = base64_data.count('=')
+    
+    # 所有检查通过
+    result['is_valid'] = True
+    return result
     
 
 def _build_from_tool_file(

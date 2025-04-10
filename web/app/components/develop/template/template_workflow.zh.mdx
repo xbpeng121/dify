@@ -62,7 +62,7 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
           - `transfer_method` (string) 传递方式，`remote_url` 图片地址 / `local_file` 上传文件 / `base64` 转为base64在json中传输
           - `url` (string) 图片地址（仅当传递方式为 `remote_url` 时）
           - `upload_file_id` (string)  上传文件 ID（仅当传递方式为 `local_file` 时）
-          - `base64` (string) 文件的base64串（仅当传递方式为`base64`时）
+          - `base64` (string) 文件的base64 url（仅当传递方式为`base64`时）
       - `response_mode` (string) Required
         返回响应模式，支持：
         - `streaming` 流式模式（推荐）。基于 SSE（**[Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)**）实现类似打字机输出方式的流式返回。
