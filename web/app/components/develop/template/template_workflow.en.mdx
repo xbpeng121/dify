@@ -623,6 +623,7 @@ Workflow applications offers non-session support and is ideal for translation, a
   - `name` (string) application name
   - `description` (string) application description
   - `tags` (array[string]) application tags
+  - `app_mode` (string) application mode
   </Col>
   <Col>
     <CodeGroup title="Request" tag="GET" label="/info" targetCode={`curl -X GET '${props.appDetail.api_base_url}/info' \\\n-H 'Authorization: Bearer {api_key}'`}>
@@ -691,7 +692,7 @@ Workflow applications offers non-session support and is ideal for translation, a
   </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/parameters" targetCode={` curl -X GET '${props.appDetail.api_base_url}/parameters'`}>
+    <CodeGroup title="Request" tag="GET" label="/parameters" targetCode={` curl -X GET '${props.appDetail.api_base_url}/parameters' \\\n-H 'Authorization: Bearer {api_key}'`}>
 
     ```bash {{ title: 'cURL' }}
     curl -X GET '${props.appDetail.api_base_url}/parameters' \
