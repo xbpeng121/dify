@@ -736,10 +736,10 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
 ---
 
 <Heading
-  url='/workflow/output'
+  url='/workflows/output'
   method='GET'
   title='获取工作流输出信息'
-  name='#/workflow/output'
+  name='#/workflows/output'
 />
 <Row>
   <Col>
@@ -757,10 +757,10 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
   </Col>
   <Col sticky>
 
-    <CodeGroup title="Request" tag="GET" label="/workflow/output" targetCode={` curl -X GET '${props.appDetail.api_base_url}/workflow/output' \\\n-H 'Authorization: Bearer {api_key}'`}>
+    <CodeGroup title="Request" tag="GET" label="/workflows/output" targetCode={` curl -X GET '${props.appDetail.api_base_url}/workflows/output' \\\n-H 'Authorization: Bearer {api_key}'`}>
 
     ```bash {{ title: 'cURL' }}
-    curl -X GET '${props.appDetail.api_base_url}/workflow/output' \
+    curl -X GET '${props.appDetail.api_base_url}/workflows/output' \
     --header 'Authorization: Bearer {api_key}'
     ```
 
