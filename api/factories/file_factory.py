@@ -206,7 +206,7 @@ def _build_from_base64(*,
     transfer_method: FileTransferMethod,
 ) -> File:
     base64_url = mapping.get("base64", '')
-    
+    base64_file = get_base64_info(base64_url)
     file_type = FileType.value_of(mapping.get("type", 'custom'))
     
     if not base64_file["is_valid"]:
@@ -214,7 +214,7 @@ def _build_from_base64(*,
     
     return File(
         id=mapping.get("id"),
-        filename="",
+        filename=str(uuid.uuid4()),
         tenant_id=tenant_id,
         type=file_type,
         transfer_method=transfer_method,

@@ -214,7 +214,7 @@ class Executor:
                     files = {
                         k: (v.filename, file_manager.download(v), v.mime_type or "application/octet-stream")
                         for k, v in files.items()
-                        if v.related_id is not None
+                        # if v.related_id is not None
                     }
                     self.data = form_data
                     self.files = files or None

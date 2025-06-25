@@ -76,6 +76,9 @@ def download(f: File, /):
         response = ssrf_proxy.get(f.remote_url, follow_redirects=True)
         response.raise_for_status()
         return response.content
+    elif f.transfer_method == FileTransferMethod.BASE64:
+        # base64 转成 bytes 返回
+        return base64.b64decode(f._storage_key)
     raise ValueError(f"unsupported transfer method: {f.transfer_method}")
 
 
