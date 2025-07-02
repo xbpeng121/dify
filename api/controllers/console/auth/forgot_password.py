@@ -48,7 +48,7 @@ class ForgotPasswordSendEmailApi(Resource):
         else:
             token = AccountService.send_reset_password_email(account=account, email=args["email"], language=language)
 
-        return {"result": "success", "data": token}
+        return {"result": "success"}
 
 
 class ForgotPasswordCheckApi(Resource):
