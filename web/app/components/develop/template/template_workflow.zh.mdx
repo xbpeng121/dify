@@ -620,6 +620,7 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
   - `description` (string) 应用描述
   - `tags` (array[string]) 应用标签
   - `app_mode` (string) 应用类型
+  - `app_id` (string) 应用ID
   </Col>
   <Col>
     <CodeGroup title="Request" tag="GET" label="/info" targetCode={`curl -X GET '${props.appDetail.api_base_url}/info' \\\n-H 'Authorization: Bearer {api_key}'`}>
@@ -636,7 +637,9 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
       "tags": [
         "tag1",
         "tag2"
-      ]
+      ],
+      "app_mode": "workflow",
+      "app_id": "uuid string"
     }
     ```
     </CodeGroup>

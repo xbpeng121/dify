@@ -990,6 +990,7 @@ Chat applications support session persistence, allowing previous chat history to
   - `description` (string) application description
   - `tags` (array[string]) application tags
   - `app_mode` (string) application mode
+  - `app_id` (string) application id
   </Col>
   <Col>
     <CodeGroup title="Request" tag="GET" label="/info" targetCode={`curl -X GET '${props.appDetail.api_base_url}/info' \\\n-H 'Authorization: Bearer {api_key}'`}>
@@ -1006,7 +1007,9 @@ Chat applications support session persistence, allowing previous chat history to
       "tags": [
         "tag1",
         "tag2"
-      ]
+      ],
+      "app_mode": "workflow",
+      "app_id": "uuid string"
     }
     ```
     </CodeGroup>
