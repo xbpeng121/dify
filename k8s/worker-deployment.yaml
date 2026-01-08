@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-worker
+  namespace: dify
+  labels:
+    app: dify-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-worker
+  template:
+    metadata:
+      labels:
+        app: dify-worker
+    spec:
+      containers:
+      - name: worker
+        image: 192.168.40.224/dify/sibat-dify-api:0.15.6
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MODE
+          value: "worker"
+        envFrom:
+        - configMapRef:
+            name: dify-config
+        - secretRef:
+            name: dify-secrets
+        # 不挂载任何存储卷
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-beat
+  namespace: dify
+  labels:
+    app: dify-beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-beat
+  template:
+    metadata:
+      labels:
+        app: dify-beat
+    spec:
+      containers:
+      - name: beat
+        image: 192.168.40.224/dify/sibat-dify-api:0.15.6
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: MODE
+          value: "beat"
+        envFrom:
+        - configMapRef:
+            name: dify-config
+        - secretRef:
+            name: dify-secrets
+        # 不挂载任何存储卷
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"

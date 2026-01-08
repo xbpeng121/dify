@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-web
+  namespace: dify
+  labels:
+    app: dify-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-web
+  template:
+    metadata:
+      labels:
+        app: dify-web
+    spec:
+      containers:
+      - name: web
+        image: 192.168.40.224/dify/sibat-dify-web:0.15.6
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: CONSOLE_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CONSOLE_API_URL
+        - name: APP_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: APP_API_URL
+        - name: NEXT_TELEMETRY_DISABLED
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: NEXT_TELEMETRY_DISABLED
+        - name: TEXT_GENERATION_TIMEOUT_MS
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: TEXT_GENERATION_TIMEOUT_MS
+        - name: CSP_WHITELIST
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: CSP_WHITELIST
+              optional: true
+        - name: TOP_K_MAX_VALUE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: TOP_K_MAX_VALUE
+        - name: INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: INDEXING_MAX_SEGMENTATION_TOKENS_LENGTH
+        - name: SENTRY_DSN
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: WEB_SENTRY_DSN
+              optional: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: dify
+  labels:
+    app: dify-web
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: dify-web
