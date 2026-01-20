@@ -17,6 +17,8 @@ const ChangePasswordForm = () => {
   const { t } = useTranslation()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
+  const code = searchParams.get('code') || ''
+  const email = searchParams.get('email') || ''
 
   const verifyTokenParams = {
     url: '/forgot-password/validity',
@@ -63,6 +65,8 @@ const ChangePasswordForm = () => {
         url: '/forgot-password/resets',
         body: {
           token,
+          code,
+          email,
           new_password: password,
           password_confirm: confirmPassword,
         },

@@ -48,7 +48,7 @@ class ForgotPasswordSendEmailApi(Resource):
         else:
             token = AccountService.send_reset_password_email(account=account, email=args["email"], language=language)
 
-        return {"result": "success"}
+        return {"result": "success", "data": token}
 
 
 class ForgotPasswordCheckApi(Resource):
@@ -80,12 +80,16 @@ class ForgotPasswordResetApi(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument("token", type=str, required=True, nullable=False, location="json")
+        parser.add_argument("email", type=str, required=True, location="json")
+        parser.add_argument("code", type=str, required=True, location="json")
         parser.add_argument("new_password", type=valid_password, required=True, nullable=False, location="json")
         parser.add_argument("password_confirm", type=valid_password, required=True, nullable=False, location="json")
         args = parser.parse_args()
 
         new_password = args["new_password"]
         password_confirm = args["password_confirm"]
+
+        user_email = args["email"]
 
         if str(new_password).strip() != str(password_confirm).strip():
             raise PasswordMismatchError()
@@ -95,6 +99,11 @@ class ForgotPasswordResetApi(Resource):
 
         if reset_data is None:
             raise InvalidTokenError()
+        
+        if user_email != reset_data.get("email"):
+            raise InvalidEmailError()
+        if args["code"] != reset_data.get("code"):
+            raise EmailCodeError()
 
         AccountService.revoke_reset_password_token(token)
 

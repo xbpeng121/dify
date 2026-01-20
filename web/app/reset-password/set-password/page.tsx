@@ -17,6 +17,8 @@ const ChangePasswordForm = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = decodeURIComponent(searchParams.get('token') || '')
+  const code = decodeURIComponent(searchParams.get('code') || '')
+  const email = decodeURIComponent(searchParams.get('email') || '')
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -73,6 +75,8 @@ const ChangePasswordForm = () => {
         url: '/forgot-password/resets',
         body: {
           token,
+          code,
+          email,
           new_password: password,
           password_confirm: confirmPassword,
         },
