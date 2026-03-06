@@ -47,8 +47,14 @@ Workflow applications offers non-session support and is ideal for translation, a
           - `transfer_method` (string) Transfer method:
             - `remote_url`: File URL.
             - `local_file`: Upload file.
+            - `base64`: Base64 encoded file (supports both pure base64 and Data URL format).
           - `url` File URL. (Only when transfer method is `remote_url`).
           - `upload_file_id` Upload file ID. (Only when transfer method is `local_file`).
+          - `base64_data` (string) Base64 encoded file data (Only when transfer method is `base64`)
+            Supports two formats:
+            - Pure base64: `iVBORw0KGgoAAAANSUhEUgA...`
+            - Data URL: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA...`
+            File size limit: 15MB (after decoding)
 
       - `response_mode` (string) Required
         The mode of response return, supporting:
@@ -213,6 +219,40 @@ Workflow applications offers non-session support and is ideal for translation, a
       }
       ```
     </CodeGroup>
+    <CodeGroup title="Example: base64 file as an input variable">
+      ```json {{ title: 'Base64 file example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
+    <CodeGroup title="Example: Data URL format base64 file">
+      ```json {{ title: 'Data URL format example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
     ### Blocking Mode
     <CodeGroup title="Response">
     ```json {{ title: 'Response' }}
@@ -359,9 +399,14 @@ Workflow applications offers non-session support and is ideal for translation, a
             - `audio` ('MP3', 'M4A', 'WAV', 'WEBM', 'AMR')
             - `video` ('MP4', 'MOV', 'MPEG', 'MPGA')
             - `custom` (Other file types)
-          - `transfer_method` (string) Transfer method, `remote_url` for image URL / `local_file` for file upload
+          - `transfer_method` (string) Transfer method, `remote_url` for image URL / `local_file` for file upload / `base64` for Base64 encoded file
           - `url` (string) Image URL (when the transfer method is `remote_url`)
           - `upload_file_id` (string) Uploaded file ID, which must be obtained by uploading through the File Upload API in advance (when the transfer method is `local_file`)
+          - `base64_data` (string) Base64 encoded file data (when the transfer method is `base64`)
+            Supports two formats:
+            - Pure base64: `iVBORw0KGgoAAAANSUhEUgA...`
+            - Data URL: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA...`
+            File size limit: 15MB (after decoding)
 
       - `response_mode` (string) Required
         The mode of response return, supporting:
@@ -524,6 +569,40 @@ Workflow applications offers non-session support and is ideal for translation, a
             }
           ]
         }
+      }
+      ```
+    </CodeGroup>
+    <CodeGroup title="Example: base64 file as an input variable">
+      ```json {{ title: 'Base64 file example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
+    <CodeGroup title="Example: Data URL format base64 file">
+      ```json {{ title: 'Data URL format example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
       }
       ```
     </CodeGroup>
@@ -865,6 +944,8 @@ Workflow applications offers non-session support and is ideal for translation, a
   - `description` (string) application description
   - `tags` (array[string]) application tags
   - `mode` (string) application mode
+  - `app_mode` (string) application mode (same as mode)
+  - `app_id` (string) application ID
   - `author_name` (string) application author name
   </Col>
   <Col>
@@ -885,7 +966,72 @@ Workflow applications offers non-session support and is ideal for translation, a
         "tag2"
       ],
       "mode": "workflow",
+      "app_mode": "workflow",
+      "app_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "author_name": "Dify"
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+<Heading
+  url='/workflows/output'
+  method='GET'
+  title='Get Workflow Output Schema'
+  name='#workflow-output'
+/>
+<Row>
+  <Col>
+  Used to get the workflow output schema definition, returning output variable information from all end nodes.
+
+  This endpoint can be called before executing the workflow to understand what output parameters and their types the workflow will return.
+
+  ### Response
+  - `workflow_output_form` (array[object]) Workflow output schema list
+    - `end_node_title` (string) End node title
+    - `variables` (array[object]) Output variable list
+      - `variable` (string) Variable name
+      - `value_type` (string) Variable type, possible values:
+        - `string` String
+        - `number` Number
+        - `object` Object
+        - `array[string]` String array
+        - `array[number]` Number array
+        - `array[object]` Object array
+        - `array[file]` File array
+      - `value_selector` (array[string]) Variable selector path
+  </Col>
+  <Col>
+    <CodeGroup
+      title="Request"
+      tag="GET"
+      label="/workflows/output"
+      targetCode={`curl -X GET '${props.appDetail.api_base_url}/workflows/output' \\
+-H 'Authorization: Bearer {api_key}'`}
+    />
+    <CodeGroup title="Response">
+    ```json {{ title: 'Response' }}
+    {
+      "workflow_output_form": [
+        {
+          "end_node_title": "End",
+          "variables": [
+            {
+              "variable": "result",
+              "value_type": "string",
+              "value_selector": ["1234567890", "text"]
+            },
+            {
+              "variable": "summary",
+              "value_type": "string",
+              "value_selector": ["0987654321", "output"]
+            }
+          ]
+        }
+      ]
     }
     ```
     </CodeGroup>

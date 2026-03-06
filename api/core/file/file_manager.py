@@ -143,6 +143,12 @@ def _get_encoded_string(f: File, /):
             data = _download_file_content(f.storage_key)
         case FileTransferMethod.DATASOURCE_FILE:
             data = _download_file_content(f.storage_key)
+        case FileTransferMethod.BASE64:
+            # For base64 files, decode the base64 data to get raw bytes
+            # Note: base64_data is always pure base64 without Data URL prefix
+            if f.base64_data is None:
+                raise ValueError("Missing base64_data for base64 transfer method")
+            data = base64.b64decode(f.base64_data)
 
     encoded_string = base64.b64encode(data).decode("utf-8")
     return encoded_string

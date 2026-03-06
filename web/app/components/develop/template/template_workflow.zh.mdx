@@ -41,9 +41,17 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
             - `audio` 具体类型包含：'MP3', 'M4A', 'WAV', 'WEBM', 'AMR'
             - `video` 具体类型包含：'MP4', 'MOV', 'MPEG', 'MPGA'
             - `custom` 具体类型包含：其他文件类型
-          - `transfer_method` (string) 传递方式，`remote_url` 图片地址 / `local_file` 上传文件
+          - `transfer_method` (string) 传递方式：
+            - `remote_url` 图片地址
+            - `local_file` 上传文件
+            - `base64` Base64 编码文件（支持纯 base64 或 Data URL 格式）
           - `url` (string) 图片地址（仅当传递方式为 `remote_url` 时）
-          - `upload_file_id` (string)  上传文件 ID（仅当传递方式为 `local_file` 时）
+          - `upload_file_id` (string) 上传文件 ID（仅当传递方式为 `local_file` 时）
+          - `base64_data` (string) Base64 编码的文件数据（仅当传递方式为 `base64` 时）
+            支持两种格式：
+            - 纯 base64：`iVBORw0KGgoAAAANSUhEUgA...`
+            - Data URL：`data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA...`
+            文件大小限制：15MB（解码后）
       - `response_mode` (string) Required
         返回响应模式，支持：
         - `streaming` 流式模式（推荐）。基于 SSE（**[Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)**）实现类似打字机输出方式的流式返回。
@@ -203,6 +211,40 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
       }
       ```
     </CodeGroup>
+    <CodeGroup title="Example: base64 file as an input variable">
+      ```json {{ title: 'Base64 file example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
+    <CodeGroup title="Example: Data URL format base64 file">
+      ```json {{ title: 'Data URL format example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
     ### Blocking Mode
     <CodeGroup title="Response">
     ```json {{ title: 'Response' }}
@@ -350,8 +392,14 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
           - `transfer_method` (string)  传递方式:
             - `remote_url`: 文件地址。
             - `local_file`: 上传文件。
+            - `base64`: Base64 编码文件（支持纯 base64 或 Data URL 格式）。
           - `url` 文件地址。（仅当传递方式为 `remote_url` 时）。
           - `upload_file_id` 上传文件 ID。（仅当传递方式为 `local_file `时）。
+          - `base64_data` (string) Base64 编码的文件数据（仅当传递方式为 `base64` 时）
+            支持两种格式：
+            - 纯 base64：`iVBORw0KGgoAAAANSUhEUgA...`
+            - Data URL：`data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA...`
+            文件大小限制：15MB（解码后）
           
       - `response_mode` (string) Required
         返回响应模式，支持：
@@ -512,6 +560,40 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
             }
           ]
         }
+      }
+      ```
+    </CodeGroup>
+    <CodeGroup title="Example: base64 file as an input variable">
+      ```json {{ title: 'Base64 file example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
+    <CodeGroup title="Example: Data URL format base64 file">
+      ```json {{ title: 'Data URL format example' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
       }
       ```
     </CodeGroup>
@@ -851,7 +933,9 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
   - `description` (string) 应用描述
   - `tags` (array[string]) 应用标签
   - `mode` (string) 应用模式
-  - 'author_name' (string) 作者名称
+  - `app_mode` (string) 应用模式（与 mode 相同）
+  - `app_id` (string) 应用 ID
+  - `author_name` (string) 作者名称
   </Col>
   <Col>
     <CodeGroup
@@ -871,7 +955,72 @@ Workflow 应用无会话支持，适合用于翻译/文章写作/总结 AI 等�
         "tag2"
       ],
       "mode": "workflow",
+      "app_mode": "workflow",
+      "app_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "author_name": "Dify"
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+<Heading
+  url='/workflows/output'
+  method='GET'
+  title='获取工作流输出结构'
+  name='#workflow-output'
+/>
+<Row>
+  <Col>
+  用于获取工作流的输出结构定义，返回所有结束节点的输出变量信息。
+
+  此接口可在执行工作流前调用，用于了解工作流会返回哪些输出参数及其类型。
+
+  ### Response
+  - `workflow_output_form` (array[object]) 工作流输出结构列表
+    - `end_node_title` (string) 结束节点标题
+    - `variables` (array[object]) 输出变量列表
+      - `variable` (string) 变量名称
+      - `value_type` (string) 变量类型，可能的值：
+        - `string` 字符串
+        - `number` 数字
+        - `object` 对象
+        - `array[string]` 字符串数组
+        - `array[number]` 数字数组
+        - `array[object]` 对象数组
+        - `array[file]` 文件数组
+      - `value_selector` (array[string]) 变量选择器路径
+  </Col>
+  <Col>
+    <CodeGroup
+      title="Request"
+      tag="GET"
+      label="/workflows/output"
+      targetCode={`curl -X GET '${props.appDetail.api_base_url}/workflows/output' \\
+-H 'Authorization: Bearer {api_key}'`}
+    />
+    <CodeGroup title="Response">
+    ```json {{ title: 'Response' }}
+    {
+      "workflow_output_form": [
+        {
+          "end_node_title": "End",
+          "variables": [
+            {
+              "variable": "result",
+              "value_type": "string",
+              "value_selector": ["1234567890", "text"]
+            },
+            {
+              "variable": "summary",
+              "value_type": "string",
+              "value_selector": ["0987654321", "output"]
+            }
+          ]
+        }
+      ]
     }
     ```
     </CodeGroup>

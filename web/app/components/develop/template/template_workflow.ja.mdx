@@ -48,8 +48,14 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
           - `transfer_method` (string) 転送方法:
             - `remote_url`: ファイルのURL。
             - `local_file`: ファイルをアップロード。
+            - `base64`: Base64エンコードされたファイル（純粋なbase64またはData URL形式をサポート）。
           - `url` ファイルのURL。（転送方法が `remote_url` の場合のみ）。
           - `upload_file_id` アップロードされたファイルID。（転送方法が `local_file` の場合のみ）。
+          - `base64_data` (string) Base64エンコードされたファイルデータ（転送方法が `base64` の場合のみ）
+            2つの形式をサポート：
+            - 純粋なbase64：`iVBORw0KGgoAAAANSUhEUgA...`
+            - Data URL：`data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA...`
+            ファイルサイズ制限：15MB（デコード後）
           
       - `response_mode` (string) 必須
         応答の返却モードを指定します。サポートされているモード：
@@ -213,6 +219,40 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
       }
       ```
     </CodeGroup>
+    <CodeGroup title="Base64ファイルの例">
+      ```json {{ title: 'Base64ファイルの例' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
+    <CodeGroup title="Data URL形式のBase64ファイルの例">
+      ```json {{ title: 'Data URL形式の例' }}
+      {
+        "inputs": {
+          "image": [
+            {
+              "transfer_method": "base64",
+              "base64_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+              "type": "image"
+            }
+          ]
+        },
+        "response_mode": "blocking",
+        "user": "abc-123"
+      }
+      ```
+    </CodeGroup>
     ### ブロッキングモード
     <CodeGroup title="応答">
     ```json {{ title: '応答' }}
@@ -357,9 +397,14 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
             - `audio` 具体的なタイプには以下が含まれます：'MP3', 'M4A', 'WAV', 'WEBM', 'AMR'
             - `video` 具体的なタイプには以下が含まれます：'MP4', 'MOV', 'MPEG', 'MPGA'
             - `custom` 具体的なタイプには以下が含まれます：その他のファイルタイプ
-          - `transfer_method` (string) 転送方法、`remote_url` 画像URL / `local_file` ファイルアップロード
+          - `transfer_method` (string) 転送方法、`remote_url` 画像URL / `local_file` ファイルアップロード / `base64` Base64エンコードされたファイル
           - `url` (string) 画像URL（転送方法が `remote_url` の場合のみ）
           - `upload_file_id` (string) アップロードされたファイルID（転送方法が `local_file` の場合のみ）
+          - `base64_data` (string) Base64エンコードされたファイルデータ（転送方法が `base64` の場合のみ）
+            2つの形式をサポート：
+            - 純粋なbase64：`iVBORw0KGgoAAAANSUhEUgA...`
+            - Data URL：`data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA...`
+            ファイルサイズ制限：15MB（デコード後）
       - `response_mode` (string) 必須
         応答返却モード、以下をサポート：
         - `streaming` ストリーミングモード（推奨）。SSE（**[Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)**）をベースにタイプライター風の出力を実現。
@@ -861,6 +906,8 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
   - `description` (string) アプリケーションの説明
   - `tags` (array[string]) アプリケーションのタグ
   - `mode` (string) アプリケーションのモード
+  - `app_mode` (string) アプリケーションのモード（modeと同じ）
+  - `app_id` (string) アプリケーションID
   - `author_name` (string) 作者の名前
   </Col>
   <Col>
@@ -881,7 +928,72 @@ import { Row, Col, Properties, Property, Heading, SubProperty, Paragraph } from 
         "tag2"
       ],
       "mode": "workflow",
+      "app_mode": "workflow",
+      "app_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
       "author_name": "Dify"
+    }
+    ```
+    </CodeGroup>
+  </Col>
+</Row>
+
+---
+
+<Heading
+  url='/workflows/output'
+  method='GET'
+  title='ワークフロー出力スキーマを取得'
+  name='#workflow-output'
+/>
+<Row>
+  <Col>
+  ワークフローの出力スキーマ定義を取得し、すべての終了ノードからの出力変数情報を返します。
+
+  このエンドポイントは、ワークフローを実行する前に呼び出して、ワークフローが返す出力パラメータとその型を理解することができます。
+
+  ### Response
+  - `workflow_output_form` (array[object]) ワークフロー出力スキーマリスト
+    - `end_node_title` (string) 終了ノードのタイトル
+    - `variables` (array[object]) 出力変数リスト
+      - `variable` (string) 変数名
+      - `value_type` (string) 変数の型、可能な値：
+        - `string` 文字列
+        - `number` 数値
+        - `object` オブジェクト
+        - `array[string]` 文字列配列
+        - `array[number]` 数値配列
+        - `array[object]` オブジェクト配列
+        - `array[file]` ファイル配列
+      - `value_selector` (array[string]) 変数セレクタパス
+  </Col>
+  <Col>
+    <CodeGroup
+      title="Request"
+      tag="GET"
+      label="/workflows/output"
+      targetCode={`curl -X GET '${props.appDetail.api_base_url}/workflows/output' \\
+-H 'Authorization: Bearer {api_key}'`}
+    />
+    <CodeGroup title="Response">
+    ```json {{ title: 'Response' }}
+    {
+      "workflow_output_form": [
+        {
+          "end_node_title": "End",
+          "variables": [
+            {
+              "variable": "result",
+              "value_type": "string",
+              "value_selector": ["1234567890", "text"]
+            },
+            {
+              "variable": "summary",
+              "value_type": "string",
+              "value_selector": ["0987654321", "output"]
+            }
+          ]
+        }
+      ]
     }
     ```
     </CodeGroup>

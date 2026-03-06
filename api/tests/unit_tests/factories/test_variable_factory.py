@@ -466,6 +466,23 @@ def _generate_file(draw) -> File:
             mime_type=mime_type,
             size=size,
         )
+    elif transfer_method == FileTransferMethod.BASE64:
+        # Generate base64 data for BASE64 transfer method
+        import base64
+
+        test_data = b"test file content"
+        base64_data = base64.b64encode(test_data).decode("utf-8")
+        file = File(
+            id="test_file_id",
+            tenant_id="test_tenant_id",
+            type=file_type,
+            transfer_method=transfer_method,
+            base64_data=base64_data,
+            filename=filename,
+            extension=extension,
+            mime_type=mime_type,
+            size=size,
+        )
     else:
         relation_id = draw(st.uuids(version=4))
 

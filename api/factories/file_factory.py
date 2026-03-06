@@ -1,3 +1,4 @@
+import base64
 import logging
 import mimetypes
 import os
@@ -5,6 +6,7 @@ import re
 import urllib.parse
 import uuid
 from collections.abc import Callable, Mapping, Sequence
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -81,6 +83,7 @@ def build_from_mapping(
         FileTransferMethod.REMOTE_URL: _build_from_remote_url,
         FileTransferMethod.TOOL_FILE: _build_from_tool_file,
         FileTransferMethod.DATASOURCE_FILE: _build_from_datasource_file,
+        FileTransferMethod.BASE64: _build_from_base64,
     }
 
     build_func = build_functions.get(transfer_method)
@@ -453,6 +456,243 @@ def _build_from_datasource_file(
         storage_key=datasource_file.key,
         url=datasource_file.source_url,
     )
+
+
+def _decode_base64_header(base64_str: str, header_size: int = 64) -> bytes:
+    """Decode only the first N bytes of a base64 string for efficient MIME type detection.
+
+    This function decodes only the header portion of a base64 string, which is sufficient
+    for file type detection using magic bytes, while avoiding the overhead of decoding
+    large files (up to 15MB).
+
+    Args:
+        base64_str: Base64 encoded string (without Data URL prefix)
+        header_size: Number of bytes to decode (default: 64 bytes, enough for all common formats)
+
+    Returns:
+        Decoded header bytes (up to header_size bytes)
+
+    Raises:
+        ValueError: If base64 string is invalid
+    """
+    # Base64 encoding: every 4 characters = 3 bytes
+    # To get N bytes, we need ceil(N * 4 / 3) characters
+    chars_needed = (header_size * 4 + 2) // 3  # Round up
+
+    # Ensure it's a multiple of 4 (base64 requirement)
+    chars_needed = ((chars_needed + 3) // 4) * 4
+
+    # Handle case where base64 string is shorter than needed
+    if len(base64_str) < chars_needed:
+        # Decode entire string if it's shorter than header size
+        try:
+            return base64.b64decode(base64_str)
+        except Exception as e:
+            raise ValueError(f"Invalid base64 data: {str(e)}")
+
+    # Extract header portion
+    header_base64 = base64_str[:chars_needed]
+
+    # Add padding if needed (shouldn't be necessary if chars_needed is multiple of 4)
+    padding_needed = (4 - len(header_base64) % 4) % 4
+    if padding_needed:
+        header_base64 += "=" * padding_needed
+
+    try:
+        decoded = base64.b64decode(header_base64)
+        return decoded[:header_size]  # Return only requested bytes
+    except Exception as e:
+        raise ValueError(f"Invalid base64 data: {str(e)}")
+
+
+def _estimate_decoded_size(base64_str: str) -> int:
+    """Estimate the decoded size of a base64 string without full decoding.
+
+    This provides a fast size estimation with accuracy within 1-2 bytes,
+    which is sufficient for size limit checks.
+
+    Args:
+        base64_str: Base64 encoded string (without Data URL prefix)
+
+    Returns:
+        Estimated decoded size in bytes
+    """
+    base64_len = len(base64_str)
+
+    # Base calculation: every 4 characters = 3 bytes
+    estimated_size = (base64_len * 3) // 4
+
+    # Adjust for padding
+    if base64_str.endswith("=="):
+        estimated_size -= 2
+    elif base64_str.endswith("="):
+        estimated_size -= 1
+
+    return estimated_size
+
+
+def _build_from_base64(
+    *,
+    mapping: Mapping[str, Any],
+    tenant_id: str,
+    transfer_method: FileTransferMethod,
+    strict_type_validation: bool = False,
+) -> File:
+    """Build a File object from base64-encoded data.
+
+    The file is kept in memory only and not persisted to storage.
+    It will be used during workflow execution and discarded after.
+
+    Supports both plain base64 and Data URL format:
+    - Plain: "iVBORw0KGgoAAAANSUhEUgA..."
+    - Data URL: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgA..."
+
+    Note: The base64_data stored in File object is always plain base64 without Data URL prefix.
+
+    Performance optimization: Only decodes the first 64 bytes for MIME type detection,
+    avoiding full decoding of large files (up to 15MB).
+    """
+    base64_data = mapping.get("base64_data")
+    if not base64_data:
+        raise ValueError("Missing base64_data for base64 transfer method")
+
+    # Parse Data URL format if present
+    mime_type_from_dataurl = None
+    if base64_data.startswith("data:"):
+        # Format: data:[<mediatype>][;base64],<data>
+        try:
+            # Split by comma to separate header and data
+            header, data_part = base64_data.split(",", 1)
+            # Store only the pure base64 data without Data URL prefix
+            base64_data = data_part
+
+            # Parse header to extract MIME type
+            # Remove "data:" prefix
+            header = header[5:]  # Remove "data:"
+
+            # Check if it contains ";base64"
+            if ";base64" in header:
+                mime_type_from_dataurl = header.replace(";base64", "").strip()
+            else:
+                mime_type_from_dataurl = header.strip()
+
+            # If MIME type is empty, set to None
+            if not mime_type_from_dataurl:
+                mime_type_from_dataurl = None
+        except ValueError:
+            raise ValueError("Invalid Data URL format. Expected format: data:[<mediatype>][;base64],<data>")
+
+    # Decode only the header (first 64 bytes) for MIME type detection and validation
+    # This is much faster than decoding the entire file (which could be up to 15MB)
+    try:
+        header_bytes = _decode_base64_header(base64_data, header_size=64)
+    except ValueError as e:
+        raise ValueError(f"Invalid base64 data: {str(e)}")
+
+    # Detect MIME type from file header (magic bytes)
+    detected_mime_type = _detect_mime_type_from_data(header_bytes)
+
+    # Determine final MIME type
+    # If Data URL provided a MIME type, verify it matches detection
+    # If mismatch, use detected type (security: trust file content over declaration)
+    if mime_type_from_dataurl:
+        # Check if declared and detected types are compatible
+        declared_main = mime_type_from_dataurl.split("/")[0]
+        detected_main = detected_mime_type.split("/")[0]
+
+        if declared_main != detected_main:
+            # Major type mismatch (e.g., image vs video) - use detected type
+            logger.warning(
+                "MIME type mismatch: Data URL declared '%s' but file header indicates '%s'. Using detected type.",
+                mime_type_from_dataurl,
+                detected_mime_type,
+            )
+            mime_type = detected_mime_type
+        else:
+            # Same major type, use declared (more specific)
+            mime_type = mime_type_from_dataurl
+    else:
+        mime_type = detected_mime_type
+
+    # Estimate file size without full decoding (fast, accuracy within 1-2 bytes)
+    file_size = _estimate_decoded_size(base64_data)
+
+    # Check file size limit (15MB)
+    max_size = 15 * 1024 * 1024  # 15MB in bytes
+    if file_size > max_size:
+        raise ValueError(f"Decoded file size ({file_size} bytes) exceeds maximum limit of {max_size} bytes (15MB)")
+
+    # Get filename from mapping or generate one
+    filename = mapping.get("filename")
+    if not filename:
+        # Generate filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        extension = mimetypes.guess_extension(mime_type) or ".bin"
+        filename = f"file_{timestamp}{extension}"
+
+    # Determine extension
+    extension = mapping.get("extension")
+    if not extension:
+        if "." in filename:
+            extension = "." + filename.split(".")[-1]
+        else:
+            extension = mimetypes.guess_extension(mime_type) or ".bin"
+
+    # Ensure extension starts with dot
+    if extension and not extension.startswith("."):
+        extension = "." + extension
+
+    # Detect file type
+    detected_file_type = _standardize_file_type(extension=extension, mime_type=mime_type)
+    specified_type = mapping.get("type")
+
+    if strict_type_validation and specified_type and detected_file_type.value != specified_type:
+        raise ValueError("Detected file type does not match the specified type. Please verify the file.")
+
+    if specified_type and specified_type != "custom":
+        file_type = FileType(specified_type)
+    else:
+        file_type = detected_file_type
+
+    # Create File object with pure base64_data (without Data URL prefix)
+    # Note: storage_key is empty as file is not persisted
+    return File(
+        id=mapping.get("id"),
+        tenant_id=tenant_id,
+        filename=filename,
+        type=file_type,
+        transfer_method=transfer_method,
+        base64_data=base64_data,  # Always store pure base64 without Data URL prefix
+        extension=extension,
+        mime_type=mime_type,
+        size=file_size,
+        storage_key="",
+    )
+
+
+def _detect_mime_type_from_data(data: bytes) -> str:
+    """Detect MIME type from file data using magic bytes."""
+    # Check common file signatures (magic bytes)
+    if data.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    elif data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    elif data.startswith(b"GIF87a") or data.startswith(b"GIF89a"):
+        return "image/gif"
+    elif data.startswith(b"RIFF") and data[8:12] == b"WEBP":
+        return "image/webp"
+    elif data.startswith(b"%PDF"):
+        return "application/pdf"
+    elif data.startswith(b"PK\x03\x04"):
+        # ZIP-based formats (docx, xlsx, etc.)
+        return "application/zip"
+    elif data.startswith(b"\x00\x00\x00\x18ftypmp4") or data.startswith(b"\x00\x00\x00\x1cftypisom"):
+        return "video/mp4"
+    elif data.startswith(b"ID3") or data.startswith(b"\xff\xfb"):
+        return "audio/mpeg"
+    else:
+        # Default to binary if unknown
+        return "application/octet-stream"
 
 
 def _is_file_valid_with_config(

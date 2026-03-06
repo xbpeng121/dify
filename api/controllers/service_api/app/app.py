@@ -91,5 +91,7 @@ class AppInfoApi(Resource):
             "description": app_model.description,
             "tags": tags,
             "mode": app_model.mode,
+            "app_mode": app_model.mode,
+            "app_id": app_model.id,
             "author_name": app_model.author_name,
         }

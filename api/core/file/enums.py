@@ -21,6 +21,7 @@ class FileTransferMethod(StrEnum):
     LOCAL_FILE = "local_file"
     TOOL_FILE = "tool_file"
     DATASOURCE_FILE = "datasource_file"
+    BASE64 = "base64"
 
     @staticmethod
     def value_of(value):

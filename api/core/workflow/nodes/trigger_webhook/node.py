@@ -80,6 +80,9 @@ class TriggerWebhookNode(Node[WebhookData]):
                     file["tool_file_id"] = related_id
                 case FileTransferMethod.DATASOURCE_FILE:
                     file["datasource_file_id"] = related_id
+                case FileTransferMethod.BASE64:
+                    # base64_data is already in the file dict, no need to set related_id
+                    pass
 
             try:
                 file_obj = file_factory.build_from_mapping(

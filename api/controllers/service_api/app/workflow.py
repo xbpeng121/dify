@@ -11,6 +11,7 @@ from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 from controllers.common.schema import register_schema_models
 from controllers.service_api import service_api_ns
 from controllers.service_api.app.error import (
+    AppUnavailableError,
     CompletionRequestError,
     NotWorkflowAppError,
     ProviderModelCurrentlyNotSupportError,
@@ -310,3 +311,34 @@ class WorkflowAppLogApi(Resource):
             )
 
             return workflow_app_log_pagination
+
+
+@service_api_ns.route("/workflows/output")
+class WorkflowOutputApi(Resource):
+    @service_api_ns.doc("get_workflow_output_schema")
+    @service_api_ns.doc(description="Get workflow output schema from end nodes")
+    @service_api_ns.doc(
+        responses={
+            200: "Output schema retrieved successfully",
+            400: "Bad request - not a workflow app",
+            401: "Unauthorized - invalid API token",
+            404: "Workflow not found",
+        }
+    )
+    @validate_app_token
+    def get(self, app_model: App):
+        """Get workflow output schema.
+
+        Returns the output schema (available output parameters) from all end nodes
+        in the workflow. This allows third parties to understand what outputs they
+        can expect before executing the workflow.
+        """
+        app_mode = AppMode.value_of(app_model.mode)
+        if app_mode != AppMode.WORKFLOW:
+            raise NotWorkflowAppError()
+
+        workflow = app_model.workflow
+        if not workflow:
+            raise AppUnavailableError()
+
+        return {"workflow_output_form": workflow.endnodes_output_form()}

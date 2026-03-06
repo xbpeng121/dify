@@ -50,6 +50,9 @@ class File(BaseModel):
     #
     # It should be set to `ToolFile.id` when `transfer_method` is `tool_file`.
     related_id: str | None = None
+    # If `transfer_method` is `FileTransferMethod.BASE64`, the
+    # `base64_data` attribute must not be `None`.
+    base64_data: str | None = None
     filename: str | None = None
     extension: str | None = Field(default=None, description="File extension, should contain dot")
     mime_type: str | None = None
@@ -67,6 +70,7 @@ class File(BaseModel):
         transfer_method: FileTransferMethod,
         remote_url: str | None = None,
         related_id: str | None = None,
+        base64_data: str | None = None,
         filename: str | None = None,
         extension: str | None = None,
         mime_type: str | None = None,
@@ -86,6 +90,7 @@ class File(BaseModel):
             transfer_method=transfer_method,
             remote_url=remote_url,
             related_id=related_id,
+            base64_data=base64_data,
             filename=filename,
             extension=extension,
             mime_type=mime_type,
@@ -153,6 +158,9 @@ class File(BaseModel):
             case FileTransferMethod.DATASOURCE_FILE:
                 if not self.related_id:
                     raise ValueError("Missing file related_id")
+            case FileTransferMethod.BASE64:
+                if not self.base64_data:
+                    raise ValueError("Missing base64_data for base64 transfer method")
         return self
 
     @property

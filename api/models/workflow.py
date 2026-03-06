@@ -29,7 +29,9 @@ from core.variables import utils as variable_utils
 from core.variables.variables import FloatVariable, IntegerVariable, StringVariable
 from core.workflow.constants import (
     CONVERSATION_VARIABLE_NODE_ID,
+    ENVIRONMENT_VARIABLE_NODE_ID,
     SYSTEM_VARIABLE_NODE_ID,
+    VARIABLE_TYPES,
 )
 from core.workflow.entities.pause_reason import HumanInputRequired, PauseReason, PauseReasonType, SchedulingPause
 from core.workflow.enums import NodeType
@@ -395,6 +397,84 @@ class Workflow(Base):  # bug
         variables: list[Any] = self.rag_pipeline_variables
 
         return variables
+
+    def endnodes_output_form(self) -> list[dict[str, Any]]:
+        """Get output schema from all end nodes in the workflow.
+
+        Returns a list of end nodes with their output variables, including:
+        - end_node_title: Title of the end node
+        - variables: List of output variables with their types and selectors
+        """
+        # get end nodes from graph
+        if not self.graph:
+            return []
+
+        graph_dict = self.graph_dict
+        if "nodes" not in graph_dict:
+            return []
+
+        end_nodes = [node for node in graph_dict["nodes"] if node["data"]["type"] == "end"]
+        if not end_nodes:
+            return []
+
+        # get endnodes_output_form from end nodes (maybe more than one end nodes)
+        result = []
+        i = 0
+        for end_node in end_nodes:
+            i = i + 1
+            outputs = end_node.get("data", {}).get("outputs", [])
+            # Add value_type to each output
+            for output in outputs:
+                value_selector = output["value_selector"]
+                value_type = self.get_type(value_selector=value_selector)
+                output["value_type"] = value_type
+
+            tmp = {
+                "end_node_title": end_node.get("data", {}).get("title", str(i)),
+                "variables": outputs,
+            }
+            result.append(tmp)
+
+        return result
+
+    def get_type(self, value_selector: Sequence[str]) -> str:
+        """Determine the type of a variable based on its value selector.
+
+        Args:
+            value_selector: Path to the variable (e.g., ["sys", "query"] or ["node_id", "output"])
+
+        Returns:
+            The SegmentType value as a string (e.g., "string", "number", "array[file]")
+        """
+        # Default type is string
+        value_type = SegmentType.STRING
+
+        if len(value_selector) < 2:
+            return value_type.value
+
+        # Handle system variables
+        if value_selector[0] == SYSTEM_VARIABLE_NODE_ID:
+            variable_key = ".".join(value_selector)
+            value_type = VARIABLE_TYPES.get(variable_key, SegmentType.STRING)
+        # Handle environment and conversation variables (default to string)
+        elif value_selector[0] in (ENVIRONMENT_VARIABLE_NODE_ID, CONVERSATION_VARIABLE_NODE_ID):
+            value_type = SegmentType.STRING
+        # Handle node outputs
+        else:
+            if not self.graph:
+                return value_type.value
+
+            graph_dict = self.graph_dict
+            node = next((node for node in graph_dict["nodes"] if node["id"] == value_selector[0]), None)
+
+            if node:
+                # Create a copy of value_selector to avoid modifying the original
+                selector_copy = list(value_selector)
+                selector_copy[0] = node["data"]["type"]
+                variable_key = ".".join(selector_copy)
+                value_type = VARIABLE_TYPES.get(variable_key, SegmentType.STRING)
+
+        return value_type.value
 
     @property
     def unique_hash(self) -> str:
