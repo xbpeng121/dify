@@ -102,21 +102,17 @@ def clean_orphaned_files_task():
 
         # Save to file for future runs
         if _set_boundary_time(current_time):
-            logger.info(
-                "Boundary time saved successfully. "
-                "Future runs will clean files created after this time."
-            )
+            logger.info("Boundary time saved successfully. Future runs will clean files created after this time.")
         else:
             logger.warning(
-                "Failed to save boundary time to file. "
-                "Please set ORPHANED_FILE_CLEANUP_START_TIME manually."
+                "Failed to save boundary time to file. Please set ORPHANED_FILE_CLEANUP_START_TIME manually."
             )
 
         logger.info("No files will be cleaned in this run.")
         return {
-            'checked': 0,
-            'cleaned': 0,
-            'boundary_set': current_time,
+            "checked": 0,
+            "cleaned": 0,
+            "boundary_set": current_time,
         }
 
     # Find candidate files
@@ -133,6 +129,7 @@ def clean_orphaned_files_task():
             try:
                 # Delete file
                 from services.file_service import FileService
+
                 FileService.delete_file_by_id(file.id)
                 total_cleaned += 1
                 logger.info(
@@ -140,7 +137,7 @@ def clean_orphaned_files_task():
                     file.id,
                     file.name,
                     file.created_by_role,
-                    (datetime.utcnow() - file.created_at).total_seconds() / 3600
+                    (datetime.utcnow() - file.created_at).total_seconds() / 3600,
                 )
             except Exception as e:
                 logger.exception("Failed to delete file %s", file.id)
@@ -148,17 +145,13 @@ def clean_orphaned_files_task():
     # Alert if cleanup count exceeds threshold
     alert_threshold = dify_config.ORPHANED_FILE_CLEANUP_ALERT_THRESHOLD_CLEANED
     if total_cleaned > alert_threshold:
-        logger.warning(
-            "High cleanup count detected: %s files deleted (threshold: %s)", total_cleaned, alert_threshold
-        )
+        logger.warning("High cleanup count detected: %s files deleted (threshold: %s)", total_cleaned, alert_threshold)
 
-    logger.info(
-        "Orphaned files cleanup completed: checked=%s, cleaned=%s", total_checked, total_cleaned
-    )
+    logger.info("Orphaned files cleanup completed: checked=%s, cleaned=%s", total_checked, total_cleaned)
 
     return {
-        'checked': total_checked,
-        'cleaned': total_cleaned,
+        "checked": total_checked,
+        "cleaned": total_cleaned,
     }
 
 
@@ -180,66 +173,54 @@ def _is_file_orphaned(file: UploadFile) -> bool:
     """
 
     # Check 1: Document
-    if db.session.query(DatasetDocument.id).filter(
-        DatasetDocument.data_source_type == "upload_file",
-        cast(DatasetDocument.data_source_info, String).contains(file.id)
-    ).first():
+    if (
+        db.session.query(DatasetDocument.id)
+        .filter(
+            DatasetDocument.data_source_type == "upload_file",
+            cast(DatasetDocument.data_source_info, String).contains(file.id),
+        )
+        .first()
+    ):
         return False
 
     # Check 2: WorkflowDraftVariableFile
-    if db.session.query(WorkflowDraftVariableFile.id).filter(
-        WorkflowDraftVariableFile.upload_file_id == file.id
-    ).first():
+    if (
+        db.session.query(WorkflowDraftVariableFile.id)
+        .filter(WorkflowDraftVariableFile.upload_file_id == file.id)
+        .first()
+    ):
         return False
 
     # Check 3: ToolFile
-    if db.session.query(ToolFile.id).filter(
-        ToolFile.file_key.contains(file.id)
-    ).first():
+    if db.session.query(ToolFile.id).filter(ToolFile.file_key.contains(file.id)).first():
         return False
 
     # Check 4: SegmentAttachmentBinding
-    if db.session.query(SegmentAttachmentBinding.id).filter(
-        SegmentAttachmentBinding.attachment_id == file.id
-    ).first():
+    if db.session.query(SegmentAttachmentBinding.id).filter(SegmentAttachmentBinding.attachment_id == file.id).first():
         return False
 
     # Check 5: Account.avatar
-    if db.session.query(Account.id).filter(
-        Account.avatar == file.id
-    ).first():
+    if db.session.query(Account.id).filter(Account.avatar == file.id).first():
         return False
 
     # Check 6: App.icon
-    if db.session.query(App.id).filter(
-        App.icon_type == "image",
-        App.icon == file.id
-    ).first():
+    if db.session.query(App.id).filter(App.icon_type == "image", App.icon == file.id).first():
         return False
 
     # Check 7: Site.icon
-    if db.session.query(Site.id).filter(
-        Site.icon_type == "image",
-        Site.icon == file.id
-    ).first():
+    if db.session.query(Site.id).filter(Site.icon_type == "image", Site.icon == file.id).first():
         return False
 
     # Check 8: Tenant.custom_config
-    if db.session.query(Tenant.id).filter(
-        cast(Tenant.custom_config, String).contains(file.id)
-    ).first():
+    if db.session.query(Tenant.id).filter(cast(Tenant.custom_config, String).contains(file.id)).first():
         return False
 
     # Check 9: DocumentSegment.content
-    if db.session.query(DocumentSegment.id).filter(
-        DocumentSegment.content.contains(file.id)
-    ).first():
+    if db.session.query(DocumentSegment.id).filter(DocumentSegment.content.contains(file.id)).first():
         return False
 
     # Check 10: Dataset.icon_info
-    if db.session.query(Dataset.id).filter(
-        cast(Dataset.icon_info, String).contains(file.id)
-    ).first():
+    if db.session.query(Dataset.id).filter(cast(Dataset.icon_info, String).contains(file.id)).first():
         return False
 
     # All checks passed, file is orphaned

@@ -2158,6 +2158,7 @@ class DocumentService:
         # Mark file as used if it's an upload_file type
         if data_source_type == "upload_file" and data_source_info and "upload_file_id" in data_source_info:
             from services.file_service import FileService
+
             FileService.mark_file_as_used(data_source_info["upload_file_id"], used_by=account.id)
 
         return document
@@ -2826,6 +2827,7 @@ class SegmentService:
 
                     # Mark attachment file as used
                     from services.file_service import FileService
+
                     FileService.mark_file_as_used(attachment_id, used_by=current_user.id)
 
                 db.session.commit()

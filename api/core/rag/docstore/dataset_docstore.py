@@ -256,4 +256,5 @@ class DatasetDocumentStore:
 
                 # Mark attachment file as used for persistent storage
                 from services.file_service import FileService
+
                 FileService.mark_file_as_used(multimodel_document.metadata["doc_id"])

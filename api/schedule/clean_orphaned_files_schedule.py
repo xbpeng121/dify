@@ -24,8 +24,8 @@ def clean_orphaned_files():
         result = clean_orphaned_files_task()
         logger.info(
             "Scheduled orphaned files cleanup completed: checked=%d, cleaned=%d",
-            result.get('checked', 0),
-            result.get('cleaned', 0)
+            result.get("checked", 0),
+            result.get("cleaned", 0),
         )
         return result
     except Exception as e:

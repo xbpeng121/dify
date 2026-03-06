@@ -2199,10 +2199,15 @@ def clean_orphaned_files_manual(hours, limit, dry_run):
     cutoff_time = datetime.utcnow() - timedelta(hours=hours)
 
     # Find candidate files
-    candidate_files = db.session.query(UploadFile).filter(
-        UploadFile.created_at < cutoff_time,
-        UploadFile.used == False,
-    ).limit(limit).all()
+    candidate_files = (
+        db.session.query(UploadFile)
+        .filter(
+            UploadFile.created_at < cutoff_time,
+            UploadFile.used == False,
+        )
+        .limit(limit)
+        .all()
+    )
 
     click.echo(f"Found {len(candidate_files)} candidate files older than {hours} hours")
 
