@@ -253,3 +253,52 @@ class FileService:
                 return
             storage.delete(upload_file.key)
             session.delete(upload_file)
+
+    @staticmethod
+    def delete_file_by_id(file_id: str):
+        """
+        Delete file by ID (for cleanup tasks)
+
+        :param file_id: file ID
+        """
+        from extensions.ext_database import db
+
+        upload_file = db.session.query(UploadFile).filter(UploadFile.id == file_id).first()
+        if not upload_file:
+            return
+
+        try:
+            storage.delete(upload_file.key)
+            db.session.delete(upload_file)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            raise
+
+    @staticmethod
+    def mark_file_as_used(upload_file_id: str, used_by: str | None = None) -> bool:
+        """
+        Mark file as used for persistent storage
+
+        :param upload_file_id: file ID
+        :param used_by: user ID who is using the file
+        :return: True if marked successfully, False otherwise
+        """
+        from datetime import datetime
+
+        from extensions.ext_database import db
+
+        try:
+            upload_file = db.session.query(UploadFile).filter(UploadFile.id == upload_file_id).first()
+            if upload_file and not upload_file.used:
+                upload_file.used = True
+                upload_file.used_at = datetime.utcnow()
+                if used_by:
+                    upload_file.used_by = used_by
+                db.session.commit()
+                return True
+            return False
+        except Exception as e:
+            db.session.rollback()
+            logger.exception("Failed to mark file as used: %s", upload_file_id)
+            return False

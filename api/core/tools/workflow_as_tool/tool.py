@@ -5,7 +5,6 @@ import logging
 from collections.abc import Generator, Mapping, Sequence
 from typing import Any, cast
 
-from flask import has_request_context
 from sqlalchemy import select
 
 from core.db.session_factory import session_factory

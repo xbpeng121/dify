@@ -317,6 +317,10 @@ class VectorService:
                     )
                 )
 
+                # Mark attachment file as used for persistent storage
+                from services.file_service import FileService
+                FileService.mark_file_as_used(upload_file.id)
+
                 # Create document for vector indexing
                 documents.append(
                     Document(page_content=upload_file.name, metadata={**base_metadata, "doc_id": upload_file.id})

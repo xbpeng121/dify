@@ -14,6 +14,7 @@ from pydantic import (
 from pydantic_settings import BaseSettings
 
 from .hosted_service import HostedServiceConfig
+from .orphaned_file_cleanup import OrphanedFileCleanupConfig
 
 
 class SecurityConfig(BaseSettings):
@@ -1156,6 +1157,12 @@ class CeleryScheduleTasksConfig(BaseSettings):
         default=60 * 60,
     )
 
+    # Orphaned file cleanup task
+    ENABLE_ORPHANED_FILE_CLEANUP_TASK: bool = Field(
+        description="Enable orphaned file cleanup task",
+        default=True,
+    )
+
 
 class PositionConfig(BaseSettings):
     POSITION_PROVIDER_PINS: str = Field(
@@ -1316,6 +1323,7 @@ class FeatureConfig(
     ModelLoadBalanceConfig,
     ModerationConfig,
     MultiModalTransferConfig,
+    OrphanedFileCleanupConfig,
     PositionConfig,
     RagEtlConfig,
     RepositoryConfig,

@@ -2172,3 +2172,68 @@ def migrate_oss(
             except Exception as e:
                 db.session.rollback()
                 click.echo(click.style(f"Failed to update DB storage_type: {str(e)}", fg="red"))
+
+
+@click.command("clean-orphaned-files-manual", help="Manually clean orphaned files (files uploaded but never used)")
+@click.option("--hours", default=24, help="Clean files older than this many hours (default: 24)")
+@click.option("--limit", default=1000, help="Maximum number of files to process (default: 1000)")
+@click.option("--dry-run", is_flag=True, help="Preview mode - show what would be deleted without actually deleting")
+def clean_orphaned_files_manual(hours, limit, dry_run):
+    """
+    Manually clean orphaned files
+
+    This command finds and deletes files that:
+    - Were uploaded more than X hours ago (default: 24)
+    - Are not marked as used (used=False)
+    - Are not associated with any entity (Message, Document, etc.)
+
+    Use --dry-run to preview what would be deleted without actually deleting.
+    """
+    from datetime import datetime, timedelta
+
+    from tasks.clean_orphaned_files_task import _is_file_orphaned
+
+    click.echo("Starting manual orphaned files cleanup...")
+    click.echo(f"Parameters: hours={hours}, limit={limit}, dry_run={dry_run}")
+
+    cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+
+    # Find candidate files
+    candidate_files = db.session.query(UploadFile).filter(
+        UploadFile.created_at < cutoff_time,
+        UploadFile.used == False,
+    ).limit(limit).all()
+
+    click.echo(f"Found {len(candidate_files)} candidate files older than {hours} hours")
+
+    total_checked = 0
+    total_cleaned = 0
+    total_skipped = 0
+
+    with click.progressbar(candidate_files, label="Processing files") as files:
+        for file in files:
+            total_checked += 1
+
+            # Verify file is orphaned
+            if _is_file_orphaned(file):
+                if dry_run:
+                    click.echo(f"[DRY RUN] Would delete: {file.id} - {file.name}")
+                    total_cleaned += 1
+                else:
+                    try:
+                        from services.file_service import FileService
+
+                        FileService.delete_file_by_id(file.id)
+                        total_cleaned += 1
+                    except Exception as e:
+                        click.echo(f"[ERROR] Failed to delete {file.id}: {str(e)}", err=True)
+            else:
+                total_skipped += 1
+
+    click.echo("\nCleanup completed:")
+    click.echo(f"  Checked: {total_checked}")
+    click.echo(f"  {'Would delete' if dry_run else 'Deleted'}: {total_cleaned}")
+    click.echo(f"  Skipped (in use): {total_skipped}")
+
+    if dry_run:
+        click.echo("\nThis was a dry run. Use without --dry-run to actually delete files.")

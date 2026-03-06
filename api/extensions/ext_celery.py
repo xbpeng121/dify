@@ -182,6 +182,12 @@ def init_app(app: DifyApp) -> Celery:
             "task": "schedule.trigger_provider_refresh_task.trigger_provider_refresh",
             "schedule": timedelta(minutes=dify_config.TRIGGER_PROVIDER_REFRESH_INTERVAL),
         }
+    if dify_config.ENABLE_ORPHANED_FILE_CLEANUP_TASK:
+        imports.append("schedule.clean_orphaned_files_schedule")
+        beat_schedule["clean_orphaned_files"] = {
+            "task": "schedule.clean_orphaned_files_schedule.clean_orphaned_files",
+            "schedule": crontab(minute="0", hour="3"),
+        }
     celery_app.conf.update(beat_schedule=beat_schedule, imports=imports)
 
     return celery_app

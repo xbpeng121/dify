@@ -999,6 +999,9 @@ class DraftVariableSaver:
             session.add(variable_file)
             session.commit()
 
+        # Mark file as used for persistent storage
+        FileService.mark_file_as_used(upload_file.id, used_by=self._user.id)
+
         return truncation_result.result, variable_file
 
     def _create_draft_variable(
