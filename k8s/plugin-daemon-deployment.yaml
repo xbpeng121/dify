@@ -1,0 +1,177 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plugin-daemon
+  namespace: dify
+  labels:
+    app: plugin-daemon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plugin-daemon
+  template:
+    metadata:
+      labels:
+        app: plugin-daemon
+    spec:
+      containers:
+      - name: plugin-daemon
+        image: langgenius/dify-plugin-daemon:0.5.2-local
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5002
+          name: http
+        env:        
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: DB_PLUGIN_DATABASE
+        - name: SERVER_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_DAEMON_PORT
+        - name: SERVER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: PLUGIN_DAEMON_KEY
+        - name: MAX_PLUGIN_PACKAGE_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_MAX_PACKAGE_SIZE
+        - name: PPROF_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_PPROF_ENABLED
+        - name: DIFY_INNER_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_DIFY_INNER_API_URL
+        - name: DIFY_INNER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: PLUGIN_DIFY_INNER_API_KEY
+        - name: PLUGIN_REMOTE_INSTALLING_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_DEBUGGING_HOST
+        - name: PLUGIN_REMOTE_INSTALLING_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_DEBUGGING_PORT
+        - name: PLUGIN_WORKING_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_STORAGE_LOCAL_ROOT
+        - name: FORCE_VERIFYING_SIGNATURE
+          value: "true"
+        - name: PYTHON_ENV_INIT_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_PYTHON_ENV_INIT_TIMEOUT
+        - name: PLUGIN_MAX_EXECUTION_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_MAX_EXECUTION_TIMEOUT
+        - name: PLUGIN_STDIO_BUFFER_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_STDIO_BUFFER_SIZE
+        - name: PLUGIN_STDIO_MAX_BUFFER_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_STDIO_MAX_BUFFER_SIZE
+        - name: PIP_MIRROR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PIP_MIRROR_URL
+        - name: PLUGIN_STORAGE_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_STORAGE_TYPE
+        - name: PLUGIN_STORAGE_LOCAL_ROOT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_STORAGE_LOCAL_ROOT
+        - name: PLUGIN_INSTALLED_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_INSTALLED_PATH
+        - name: PLUGIN_PACKAGE_CACHE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_PACKAGE_CACHE_PATH
+        - name: PLUGIN_MEDIA_CACHE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_MEDIA_CACHE_PATH
+        - name: ALIYUN_OSS_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_ALIYUN_OSS_REGION
+        - name: ALIYUN_OSS_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_ALIYUN_OSS_ENDPOINT
+        - name: ALIYUN_OSS_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_ALIYUN_OSS_PATH
+        - name: ALIYUN_OSS_AUTH_VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_ALIYUN_OSS_AUTH_VERSION
+        volumeMounts:
+        - name: plugin-storage
+          mountPath: /app/storage
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+      volumes:
+      - name: plugin-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plugin-daemon
+  namespace: dify
+  labels:
+    app: plugin-daemon
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5002
+    targetPort: 5002
+    protocol: TCP
+    name: http
+  selector:
+    app: plugin-daemon

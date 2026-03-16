@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dify-sandbox
+  namespace: dify
+  labels:
+    app: dify-sandbox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dify-sandbox
+  template:
+    metadata:
+      labels:
+        app: dify-sandbox
+    spec:
+      containers:
+      - name: sandbox
+        image: 192.168.40.224/dify/langgenius/dify-sandbox:0.2.12
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8194
+          name: http
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: SANDBOX_API_KEY
+        - name: GIN_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SANDBOX_GIN_MODE
+        - name: WORKER_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SANDBOX_WORKER_TIMEOUT
+        - name: ENABLE_NETWORK
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SANDBOX_ENABLE_NETWORK
+        - name: HTTP_PROXY
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SANDBOX_HTTP_PROXY
+        - name: HTTPS_PROXY
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SANDBOX_HTTPS_PROXY
+        - name: SANDBOX_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: SANDBOX_PORT
+        # 使用 emptyDir 存储依赖，Pod 重启后自动重新下载
+        volumeMounts:
+        - name: tmp-dependencies
+          mountPath: /dependencies
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8194
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8194
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: tmp-dependencies
+        emptyDir:
+          sizeLimit: 2Gi  # 限制临时目录大小
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sandbox
+  namespace: dify
+  labels:
+    app: dify-sandbox
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8194
+    targetPort: 8194
+    protocol: TCP
+    name: http
+  selector:
+    app: dify-sandbox

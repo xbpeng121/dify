@@ -1,0 +1,78 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dify-ingress
+  namespace: dify
+  annotations:
+    # 使用 Nginx Ingress Controller
+    kubernetes.io/ingress.class: "nginx"
+    
+    # Nginx 配置
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "360"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
+    
+    # WebSocket 支持
+    nginx.ingress.kubernetes.io/websocket-services: "api"
+    
+    # 使用正则表达式匹配路径
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    
+    # SSL 配置(如需要HTTPS,取消注释并配置证书)
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  # TLS 配置(如需要HTTPS,取消注释)
+  # tls:
+  # - hosts:
+  #   - your-domain.com
+  #   secretName: dify-tls-secret
+  
+  rules:
+  # - host: your-domain.com  # 如需使用域名,解除注释并替换为你的域名。默认使用 - http: 不指定域名
+  - http:
+      paths:
+      # API 相关路径,优先级高
+      - path: /console/api
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 5001
+      
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 5001
+      
+      - path: /v1
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 5001
+      
+      - path: /files
+        pathType: Prefix
+        backend:
+          service:
+            name: api
+            port:
+              number: 5001
+      
+      # Web 前端,优先级最低
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 3000
