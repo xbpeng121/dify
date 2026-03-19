@@ -102,6 +102,7 @@ echo "  ✅ $HARBOR_URL/$HARBOR_PROJECT/ubuntu/squid:latest"
 echo "  ✅ $HARBOR_URL/$HARBOR_PROJECT/sibat-dify-web:1.11.4"
 echo "  ✅ $HARBOR_URL/$HARBOR_PROJECT/sibat-dify-api:1.11.4"
 echo "  ✅ $HARBOR_URL/$HARBOR_PROJECT/langgenius/dify-sandbox:0.2.12"
+echo "  ✅ $HARBOR_URL/$HARBOR_PROJECT/langgenius/dify-plugin-daemon:0.5.2-local"
 echo ""
 
 echo ""
@@ -129,7 +130,7 @@ fi
 log_info "更新镜像地址..."
 
 # 备份原文件
-for file in api-deployment.yaml worker-deployment.yaml web-deployment.yaml sandbox-deployment.yaml ssrf-proxy-deployment.yaml; do
+for file in api-deployment.yaml worker-deployment.yaml web-deployment.yaml sandbox-deployment.yaml ssrf-proxy-deployment.yaml plugin-daemon-deployment.yaml; do
     if [ -f "$file" ]; then
         cp "$file" "${file}.bak.$(date +%Y%m%d%H%M%S)"
     fi
@@ -159,6 +160,11 @@ fi
 if [ -f "ssrf-proxy-deployment.yaml" ]; then
     sed -i "s|image: ubuntu/squid.*|image: $HARBOR_URL/$HARBOR_PROJECT/ubuntu/squid:latest|g" ssrf-proxy-deployment.yaml
     log_info "✅ 已更新 ssrf-proxy-deployment.yaml"
+fi
+
+if [ -f "plugin-daemon-deployment.yaml" ]; then
+    sed -i "s|image:.*dify-plugin-daemon.*|image: $HARBOR_URL/$HARBOR_PROJECT/langgenius/dify-plugin-daemon:0.5.2-local|g" plugin-daemon-deployment.yaml
+    log_info "✅ 已更新 plugin-daemon-deployment.yaml"
 fi
 
 

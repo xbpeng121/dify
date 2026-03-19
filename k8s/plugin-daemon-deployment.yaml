@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: plugin-daemon
-        image: langgenius/dify-plugin-daemon:0.5.2-local
+        image: 192.168.40.224/dify/langgenius/dify-plugin-daemon:0.5.2-local
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5002
@@ -57,7 +57,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: dify-secrets
-              key: PLUGIN_DIFY_INNER_API_KEY
+              key: PLUGIN_DIFY_INNER_API_KEY     
         - name: PLUGIN_REMOTE_INSTALLING_HOST
           valueFrom:
             configMapKeyRef:
@@ -66,65 +66,13 @@ spec:
         - name: PLUGIN_REMOTE_INSTALLING_PORT
           valueFrom:
             configMapKeyRef:
-              name: dify-config
+              name: dify-config              
               key: PLUGIN_DEBUGGING_PORT
-        - name: PLUGIN_WORKING_PATH
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_STORAGE_LOCAL_ROOT
-        - name: FORCE_VERIFYING_SIGNATURE
-          value: "true"
         - name: PYTHON_ENV_INIT_TIMEOUT
           valueFrom:
             configMapKeyRef:
               name: dify-config
               key: PLUGIN_PYTHON_ENV_INIT_TIMEOUT
-        - name: PLUGIN_MAX_EXECUTION_TIMEOUT
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_MAX_EXECUTION_TIMEOUT
-        - name: PLUGIN_STDIO_BUFFER_SIZE
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_STDIO_BUFFER_SIZE
-        - name: PLUGIN_STDIO_MAX_BUFFER_SIZE
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_STDIO_MAX_BUFFER_SIZE
-        - name: PIP_MIRROR_URL
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PIP_MIRROR_URL
-        - name: PLUGIN_STORAGE_TYPE
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_STORAGE_TYPE
-        - name: PLUGIN_STORAGE_LOCAL_ROOT
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_STORAGE_LOCAL_ROOT
-        - name: PLUGIN_INSTALLED_PATH
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_INSTALLED_PATH
-        - name: PLUGIN_PACKAGE_CACHE_PATH
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_PACKAGE_CACHE_PATH
-        - name: PLUGIN_MEDIA_CACHE_PATH
-          valueFrom:
-            configMapKeyRef:
-              name: dify-config
-              key: PLUGIN_MEDIA_CACHE_PATH
         - name: ALIYUN_OSS_REGION
           valueFrom:
             configMapKeyRef:
@@ -135,6 +83,16 @@ spec:
             configMapKeyRef:
               name: dify-config
               key: PLUGIN_ALIYUN_OSS_ENDPOINT
+        - name: ALIYUN_OSS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: PLUGIN_ALIYUN_OSS_ACCESS_KEY_ID
+        - name: ALIYUN_OSS_ACCESS_KEY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dify-secrets
+              key: PLUGIN_ALIYUN_OSS_ACCESS_KEY_SECRET
         - name: ALIYUN_OSS_PATH
           valueFrom:
             configMapKeyRef:
@@ -145,6 +103,16 @@ spec:
             configMapKeyRef:
               name: dify-config
               key: PLUGIN_ALIYUN_OSS_AUTH_VERSION
+        - name: ALIYUN_OSS_BUCKET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: dify-config
+              key: PLUGIN_STORAGE_OSS_BUCKET
+        envFrom:
+        - configMapRef:
+            name: dify-config
+        - secretRef:
+            name: dify-secrets
         volumeMounts:
         - name: plugin-storage
           mountPath: /app/storage
@@ -173,5 +141,9 @@ spec:
     targetPort: 5002
     protocol: TCP
     name: http
+  - port: 5003
+    targetPort: 5003
+    protocol: TCP
+    name: debug-port
   selector:
     app: plugin-daemon

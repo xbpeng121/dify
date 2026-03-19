@@ -1,14 +1,8 @@
-[toc]
-
 ## Dify 自定义部署文档
 
 ### 选型说明
 
-生产基于Dify官方0.15.6分支上，修复和改进其中部分能力后，独立编译运行。
-
-不采用最新1.x.x版本，是由于测试时，1.x.x版本在大模型调用层面效率比0.15.x版本低非常多，并伴有不少的BUG。
-
-1.x版本的更新内容，主要是插件重构，基于稳定性考虑，暂时不选用（2025.04.11）等待1.x版本稳定并有业务强依赖的新特性后，再考虑重新fork
+基于Dify官方1.11.4分支上，修复和改进其中部分能力后，独立编译运行。
 
 fork并修改的分支维护于https://github.com/xbpeng121/dify
 
@@ -23,27 +17,27 @@ fork并修改的分支维护于https://github.com/xbpeng121/dify
 
 
 
-### 初始化安装
+### docker部署
 
 1. 下载源代码到本地，切换到指定分支
 
    ```shell
-   git clone git@github.com:xbpeng121/dify.git
-   git checkout release/0.15.6-alpha-1-sibat
+   git clone https://github.com/xbpeng121/dify.git
+   git checkout release/e-1.11.4-sibat
    ```
 
 2. 编译api镜像
 
    ```shell
    cd api
-   docker build --platform linux/amd64 -t sibat-dify-api:0.15.6 .
+   docker build --platform linux/amd64 -t sibat-dify-api:1.11.4 .
    ```
 
 3. 编译web镜像
 
    ```shell
    cd web
-   docker build --platform linux/amd64 -t sibat-dify-web:0.15.6 .
+   docker build --platform linux/amd64 -t sibat-dify-web:1.11.4 .
    ```
 
 4. 编辑配置文件并启动
@@ -54,35 +48,7 @@ fork并修改的分支维护于https://github.com/xbpeng121/dify
    docker compose up -d
    ```
 
-   
-
-### 升级安装
-
-1. 备份自定义 docker-compose YAML 文件（可选，如果有变动的话）
-
-   ```shell
-   cd docker
-   cp docker-compose.yaml docker-compose.yaml.$(date +%s).bak
-   ```
-
-2. 获取最新代码（注意确认分支）
-
-   ```shell
-   git checkout release/0.15.6-alpha-1-sibat
-   git pull
-   ```
-
-3. 重新编译镜像
-
-   ```shell
-   cd api
-   docker build --platform linux/amd64 -t sibat-dify-api:0.15.6 .
-   
-   cd web
-   docker build --platform linux/amd64 -t sibat-dify-web:0.15.6 .
-   ```
-
-4. 若服务环境不方便拉取和编译，可以拷贝代码和镜像文件
+5. 若服务环境不方便拉取和编译，可以拷贝代码和镜像文件
 
    ```shell
    # 备份镜像文件
@@ -94,23 +60,52 @@ fork并修改的分支维护于https://github.com/xbpeng121/dify
    docker load -i sibat-dify-web.tar
    ```
 
-5. 停止服务
+
+
+### K8s部署（详见k8s目录下README文档）
+
+1. 下载源代码到本地，切换到指定分支
 
    ```shell
-   cd docker 
-   docker compose down
+   git clone https://github.com/xbpeng121/dify.git
+   git checkout release/e-1.11.4-sibat
    ```
 
-6. 备份数据
+2. 进入k8s目录，并赋予脚本执行权限   
 
    ```shell
-   tar -cvf volumes-$(date +%s).tgz volumes
+   cd k8s
+   # 赋予执行权限
+   chmod +x harbor_setup.sh
+   chmod +x deploy.sh
    ```
 
-7. 升级服务
+3. 初始化harbor库，并上传所有需要的镜像
 
-   ```shell
-   docker compose up -d
+   ```shell   
+   # 根据脚本指引初始化harbor库、并上传镜像文件
+   sh harbor_setup.sh
+   ```
+
+4. 根据需要配置环境变量
+
+   ```shell   
+   # 编辑环境变量文件
+   vim configmap.yaml
+   vim secrets.yaml
+   ```
+
+5. 使用部署脚本，完成部署、查看、删除
+
+   ```shell   
+   # 部署所有资源
+   sh deploy.sh apply
+   
+   # 查看状态
+   sh deploy.sh status
+   
+   # 删除所有资源
+   sh deploy.sh delete
    ```
 
 

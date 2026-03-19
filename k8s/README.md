@@ -19,7 +19,8 @@
 1. **ubuntu/squid:latest** 可从公共库拉取
 2. **sibat-dify-web:1.11.4** 自编译，需手动上传
 3. **sibat-dify-api:1.11.4** 自编译，需手动上传
-4. **langgenius/dify-sandbox:0.2.12** 自编译，需手动上传
+4. **langgenius/dify-sandbox:0.2.12** 可从公共库拉取
+5. **langgenius/dify-plugin-daemon:0.5.2-local** 可从公共库拉取
 
 ## 文件说明
 
@@ -33,9 +34,11 @@
 | `worker-deployment.yaml` | Worker 和 Beat 部署 |
 | `web-deployment.yaml` | Web 前端部署 |
 | `sandbox-deployment.yaml` | 代码沙箱部署 |
+| `plugin-daemon-deployment.yaml` | 插件部署 |
 | `ssrf-proxy-deployment.yaml` | SSRF 代理部署 |
 | `ingress.yaml` | Ingress 路由配置 |
 | `deploy.sh` | 自动化部署脚本 |
+| `setup-config.sh` | 交互式配置引导脚本 |
 | `harbor_setup.sh` | harbor 镜像仓库配置脚本 |
 | `fix_ingress_nginx.sh` | 修复 Ingress Nginx 脚本|
 
@@ -57,15 +60,25 @@ kubectl get pods -n ingress-nginx
 
 ### 2. 修改配置
 
-根据你的环境修改以下配置:
+推荐使用交互式引导脚本自动完成配置替换：
+
+```bash
+bash setup-config.sh
+```
+
+脚本会按分组引导你输入数据库、Redis、阿里云 OSS、Weaviate 的连接信息，关联字段只需输入一次，直接回车可保留当前默认值。输入完成后会显示配置摘要，确认后自动写入 `configmap.yaml` 和 `secrets.yaml`。
+
+如需手动修改，参考以下说明：
 
 #### `configmap.yaml`
+
 - 数据库配置: `DB_HOST`, `DB_PORT`, `DB_DATABASE`
 - Redis 配置: `REDIS_HOST`, `REDIS_PORT`
 - Weaviate 配置: `WEAVIATE_ENDPOINT`
 - 其他根据需要调整
 
 #### `secrets.yaml`
+
 **重要**: 修改所有密钥!
 - `SECRET_KEY`: 应用密钥
 - `DB_PASSWORD`: 数据库密码
@@ -73,8 +86,8 @@ kubectl get pods -n ingress-nginx
 - `WEAVIATE_API_KEY`: Weaviate API 密钥
 - `ALIYUN_OSS_ACCESS_KEY` 和 `ALIYUN_OSS_SECRET_KEY`: 阿里云 OSS 密钥
 
-
 #### `ingress.yaml`
+
 - 如需域名，修改 `host` 为你的域名
 - 如需 HTTPS,取消注释 TLS 配置
 
@@ -114,6 +127,7 @@ kubectl apply -f harbor-secret.yaml
 # 3. 部署服务
 kubectl apply -f ssrf-proxy-deployment.yaml
 kubectl apply -f sandbox-deployment.yaml
+kubectl apply -f plugin-daemon-deployment.yaml
 kubectl apply -f api-deployment.yaml
 kubectl apply -f worker-deployment.yaml
 kubectl apply -f web-deployment.yaml
@@ -159,6 +173,8 @@ Ingress 配置实现了以下路由规则(与原 Nginx 配置一致):
 | `/api` | api | 5001 |
 | `/v1` | api | 5001 |
 | `/files` | api | 5001 |
+| `/e/` | plugin-daemon | 5002 |
+| `/explore` | web | 3000 |
 | `/` | web | 3000 |
 
 ## 网络架构
@@ -170,7 +186,8 @@ Ingress Nginx
     ↓
 ┌─────────────────────────────────┐
 │  /console/api, /api, /v1, /files → API Service (5001)
-│  /                                → Web Service (3000)
+│  /e/                             → plugin-daemon Service (5002)
+│  /explore, /                     → Web Service (3000)
 └─────────────────────────────────┘
     ↓                    ↓
 API Pods            Web Pods

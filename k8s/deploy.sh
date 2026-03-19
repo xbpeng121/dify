@@ -6,7 +6,7 @@
 set -e
 
 NAMESPACE="dify"
-#ACTION=${1:-apply}
+ACTION=${1}
 
 # 颜色输出
 RED='\033[0;31m'
@@ -81,6 +81,10 @@ apply_resources() {
     # 部署 Sandbox
     log_info "部署 Sandbox..."
     kubectl apply -f sandbox-deployment.yaml
+
+    # 部署 plugin-daemon
+    log_info "部署 Plugin Daemon..."
+    kubectl apply -f plugin-daemon-deployment.yaml
     
     # 部署 API
     log_info "部署 API 服务..."
@@ -124,6 +128,7 @@ delete_resources() {
     kubectl delete -f worker-deployment.yaml --ignore-not-found=true
     kubectl delete -f api-deployment.yaml --ignore-not-found=true
     kubectl delete -f sandbox-deployment.yaml --ignore-not-found=true
+    kubectl delete -f plugin-daemon-deployment.yaml --ignore-not-found=true    
     kubectl delete -f ssrf-proxy-deployment.yaml --ignore-not-found=true
     kubectl delete -f harbor-secret.yaml --ignore-not-found=true
     kubectl delete -f secrets.yaml --ignore-not-found=true

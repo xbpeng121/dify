@@ -30,7 +30,11 @@ spec:
   # - hosts:
   #   - your-domain.com
   #   secretName: dify-tls-secret
-  
+  defaultBackend:
+    service:
+      name: web
+      port:
+        number: 3000
   rules:
   # - host: your-domain.com  # 如需使用域名,解除注释并替换为你的域名。默认使用 - http: 不指定域名
   - http:
@@ -67,6 +71,22 @@ spec:
             name: api
             port:
               number: 5001
+
+      - path: /e/
+        pathType: Prefix
+        backend:
+          service:
+            name: plugin-daemon
+            port:
+              number: 5002
+
+      - path: /explore
+        pathType: Prefix
+        backend:
+          service:
+            name: web
+            port:
+              number: 3000
       
       # Web 前端,优先级最低
       - path: /
