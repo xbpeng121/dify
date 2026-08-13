@@ -172,6 +172,21 @@ Worker服务 是否启用自动扩缩容
 
 Worker服务 启用自动扩缩容后，最大worker数量和最小worker数量
 
+#### WORKFLOW_LOG_CLEANUP_ENABLED
+
+true    启用每天凌晨 2:00 自动清理工作流执行日志。
+
+### WORKFLOW_LOG_RETENTION_DAYS
+
+30 清理前保留工作流日志的天数。
+
+### WORKFLOW_LOG_CLEANUP_BATCH_SIZE
+
+100 每次清理批次处理的日志条目数。根据系统性能调整。
+
+
+
+
 
 
 ### 支持较高并发的参数配置
